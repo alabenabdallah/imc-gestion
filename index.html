@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1300,12 +1301,32 @@ const SYNCED_TABLES = ['dossiers','clients','factures','devis','depenses','banqu
 
 /* charge toutes les tables métier depuis Supabase dans DB */
 async function fetchAllTables(){
-  const results = await Promise.all(SYNCED_TABLES.map(t => sb.from(t).select('id,payload').order('updated_at', {ascending:false})));
+  const results = await Promise.all(SYNCED_TABLES.map(async t => {
+    let res = await sb.from(t).select('id,payload').order('updated_at', {ascending:false});
+    if(res.error){
+      /* la colonne 'updated_at' n'existe peut-être pas encore sur cette table :
+         on retente sans tri plutôt que d'abandonner le chargement */
+      console.warn('Tri par updated_at impossible sur', t, '— nouvelle tentative sans tri.', res.error.message);
+      res = await sb.from(t).select('id,payload');
+    }
+    return res;
+  }));
+  let hadError = false;
   results.forEach((res, i) => {
     const key = SYNCED_TABLES[i];
-    if(res.error){ console.error('Erreur chargement', key, res.error); return; }
+    if(res.error){
+      hadError = true;
+      console.error('Erreur chargement', key, res.error);
+      return;
+    }
     DB[key] = (res.data || []).map(row => Object.assign({id: row.id}, row.payload));
+    if(DB[key].length === 0){
+      console.warn('Table "'+key+'" chargée vide — si tu as pourtant des données dans Supabase, vérifie la policy RLS SELECT de cette table.');
+    }
   });
+  if(hadError){
+    showToast('Certaines données n\'ont pas pu être chargées depuis le serveur (voir console F12).', true);
+  }
 }
 
 /* crée ou met à jour un enregistrement */
