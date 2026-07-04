@@ -5,6 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IMC — Gestion comptable</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+<meta name="theme-color" content="#0a2540">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -219,7 +224,6 @@
   .submenu a:hover{background:rgba(46,95,191,.08);color:var(--ink);}
   .submenu a:hover::before,.submenu a.active::before{background:var(--gold-dark);}
   .submenu a.active{color:var(--gold-deep);font-weight:600;}
-  
 
   .premium-card{
     position:relative;overflow:hidden;border-radius:16px;padding:20px 18px;text-align:center;color:var(--ink);margin-top:16px;
@@ -1948,6 +1952,7 @@ function filteredRows(name){
 function renderTable(name){
   const cfg = ENTITIES[name];
   const tbody = $('#tbody-'+name);
+  if(!tbody) return; // la page de cette entité n'a pas encore été construite dans le DOM
   const rows = filteredRows(name);
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="${cfg.columns.length+1}"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>Aucun résultat. Cliquez sur « Nouveau » pour ajouter un élément.</p></div></td></tr>`;
