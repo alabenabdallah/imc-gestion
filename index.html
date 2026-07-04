@@ -1187,7 +1187,9 @@ const toISO = d => { const x = new Date(d); return isNaN(x) ? '' : x.toISOString
 const fmtDate = d => { if(!d) return '—'; const x=new Date(d); return isNaN(x)? d : x.toLocaleDateString('fr-FR'); };
 const escapeHtml = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let _uid = 1000;
-const uid = () => '#' + (++_uid);
+const uid = () => (typeof crypto !== 'undefined' && crypto.randomUUID)
+  ? crypto.randomUUID()
+  : '#' + Date.now().toString(36) + '-' + (++_uid) + '-' + Math.random().toString(36).slice(2,8);
 
 /* ---------- toast ---------- */
 const toastEl = $('#toast'), toastMsg = $('#toastMsg');
