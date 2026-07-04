@@ -1933,6 +1933,7 @@ function renderCrudPage(name){
 
 function filteredRows(name){
   const cfg = ENTITIES[name];
+  if(!crudState[name]) crudState[name] = {query:''};
   const q = (crudState[name].query||'').trim().toLowerCase();
   let rows = DB[cfg.key].slice();
   if(q) rows = rows.filter(r => cfg.search(r).includes(q));
