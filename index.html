@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -875,10 +874,15 @@
       <a class="nav-item" data-route="depenses"><i class="icon fa-solid fa-sack-dollar"></i>Dépenses</a>
       <a class="nav-item" data-route="banque"><i class="icon fa-solid fa-building-columns"></i>Banque</a>
 
+      <div class="nav-label">Achats &amp; Articles</div>
+      <a class="nav-item" data-route="facturesAchat"><i class="icon fa-solid fa-cart-shopping"></i>Factures d'achat</a>
+      <a class="nav-item" data-route="articles"><i class="icon fa-solid fa-boxes-stacked"></i>Articles</a>
+
       <div class="nav-label">Ressources humaines</div>
       <a class="nav-item" data-route="employes"><i class="icon fa-solid fa-helmet-safety"></i>Ouvriers / Employés</a>
       <a class="nav-item" data-route="pointage"><i class="icon fa-solid fa-clock"></i>Pointage</a>
       <a class="nav-item" data-route="acomptes"><i class="icon fa-solid fa-hand-holding-dollar"></i>Acomptes</a>
+      <a class="nav-item" data-route="reglementsMO"><i class="icon fa-solid fa-money-check-dollar"></i>Règlement main d'œuvre</a>
       <a class="nav-item" data-route="paie"><i class="icon fa-solid fa-file-invoice-dollar"></i>Fiches de paie</a>
 
       <div class="nav-label">Fiscalité &amp; Banque</div>
@@ -893,6 +897,7 @@
       <a class="nav-item" data-route="import"><i class="icon fa-solid fa-cloud-arrow-up"></i>Importation Factures / Devis</a>
 
       <div class="nav-label">Système</div>
+      <a class="nav-item" data-route="docsAdmin"><i class="icon fa-solid fa-folder-tree"></i>Dossier administratif</a>
       <a class="nav-item" data-route="parametres"><i class="icon fa-solid fa-gear"></i>Paramètres</a>
       <a class="nav-item" data-route="utilisateurs"><i class="icon fa-solid fa-users"></i>Utilisateurs</a>
       <a class="nav-item" data-route="aide"><i class="icon fa-solid fa-circle-question"></i>Aide &amp; Support</a>
@@ -999,6 +1004,18 @@
         </div>
       </div>
 
+      <!-- Accès rapide : nouveaux dossiers de gestion -->
+      <div class="panel" style="margin:18px 0;">
+        <div class="panel-head"><h3><i class="fa-solid fa-bolt" style="color:var(--gold-dark);margin-right:10px;"></i>Accès rapide</h3></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;padding:4px 2px 6px;">
+          <button class="btn-ghost" data-feature="facturesAchat"><i class="fa-solid fa-cart-shopping"></i> Factures d'achat</button>
+          <button class="btn-ghost" data-feature="reglementsMO"><i class="fa-solid fa-money-check-dollar"></i> Règlement main d'œuvre</button>
+          <button class="btn-ghost" data-feature="articles"><i class="fa-solid fa-boxes-stacked"></i> Articles (factures &amp; devis)</button>
+          <button class="btn-ghost" data-feature="docsAdmin"><i class="fa-solid fa-folder-tree"></i> Dossier administratif</button>
+          <button class="btn-ghost" data-feature="depenses"><i class="fa-solid fa-sack-dollar"></i> Dépenses</button>
+        </div>
+      </div>
+
       <div class="grid-5b" id="kpiRow">
         <div class="kpi-card kpi-blue"><div class="kpi-top"><div class="label">Revenus</div><div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div></div><div class="value" id="kpiRevenus">0 €</div><div class="delta up"><i class="fa-solid fa-arrow-up"></i> 12.5% <span class="delta-label">vs mois dernier</span></div></div>
         <div class="kpi-card kpi-red"><div class="kpi-top"><div class="label">Dépenses</div><div class="kpi-ico"><i class="fa-solid fa-credit-card"></i></div></div><div class="value" id="kpiDepenses">0 €</div><div class="delta down"><i class="fa-solid fa-arrow-down"></i> 8.3% <span class="delta-label">vs mois dernier</span></div></div>
@@ -1088,6 +1105,10 @@
     <section class="page" id="page-rs"></section>
     <section class="page" id="page-biat"></section>
     <section class="page" id="page-recus"></section>
+    <section class="page" id="page-facturesAchat"></section>
+    <section class="page" id="page-articles"></section>
+    <section class="page" id="page-reglementsMO"></section>
+    <section class="page" id="page-docsAdmin"></section>
     <section class="page" id="page-hebdo"></section>
 
     <footer>© 2026 <b>STE IMC E RENOVATION URBAIN</b> — Application de gestion comptable &nbsp;·&nbsp; BY <b>BENABDALLAH ALA</b></footer>
@@ -1294,6 +1315,31 @@ const DB = {
     {id:uid(), numero:'REC-2024-031', date:'2024-05-27', beneficiaire:'Ali Ben Salah', objet:'Acompte sur salaire', montant:200, mode:'Espèces', statut:'Émis'},
     {id:uid(), numero:'REC-2024-030', date:'2024-05-20', beneficiaire:'Société Martin', objet:'Règlement facture F2024-0055', montant:4500, mode:'Virement BIAT', statut:'Émis'},
   ],
+
+  /* ====== Factures d'achat (fournisseurs) ====== */
+  facturesAchat: [
+    {id:uid(), numero:'FA2024-0001', fournisseur:'Sotumetal', dossier:'Dossier A', dateFacture:'2024-05-12', dateEcheance:'2024-06-12', objet:'Fer à béton + treillis', montantHT:3200, tva:19, montantTTC:3808, mode:'Virement BIAT', statut:'À payer'},
+    {id:uid(), numero:'FA2024-0002', fournisseur:'Comptoir du Bâtiment', dossier:'Dossier B', dateFacture:'2024-05-18', dateEcheance:'2024-05-31', objet:'Ciment CPA 42.5 — 120 sacs', montantHT:1450, tva:19, montantTTC:1725.5, mode:'Chèque', statut:'Payée'},
+  ],
+
+  /* ====== Catalogue d'articles (liés aux factures & devis) ====== */
+  articles: [
+    {id:uid(), reference:'ART-001', designation:'Ciment CPA 42.5 (sac 50kg)', unite:'sac', categorie:'Matériaux', prixAchat:11.5, prixHT:14.5, tva:19, statut:'Actif'},
+    {id:uid(), reference:'ART-002', designation:'Fer à béton Ø12 (barre 12m)', unite:'barre', categorie:'Matériaux', prixAchat:26, prixHT:32, tva:19, statut:'Actif'},
+    {id:uid(), reference:'ART-003', designation:'Main d\'œuvre maçonnerie', unite:'jour', categorie:'Prestation', prixAchat:0, prixHT:60, tva:19, statut:'Actif'},
+    {id:uid(), reference:'ART-004', designation:'Peinture acrylique blanche (pot 25kg)', unite:'pot', categorie:'Matériaux', prixAchat:58, prixHT:72, tva:19, statut:'Actif'},
+  ],
+
+  /* ====== Règlements main d'œuvre ====== */
+  reglementsMO: [
+    {id:uid(), reference:'RMO-2024-001', employe:'Ali Ben Salah', dossier:'Dossier A', periode:'Semaine 20 (13–18 mai)', jours:6, montant:240, mode:'Espèces', date:'2024-05-18', statut:'Réglé', note:''},
+  ],
+
+  /* ====== Dossier administratif de la société ====== */
+  docsAdmin: [
+    {id:uid(), titre:'Registre de commerce', categorie:'Registre de commerce', dateDoc:'2020-01-15', dateExpiration:'', reference:'RC-B12345-2020', note:'Extrait RNE de la société.', statut:'Valide'},
+    {id:uid(), titre:'Attestation CNSS employeur', categorie:'CNSS', dateDoc:'2024-01-05', dateExpiration:'2024-12-31', reference:'CNSS-778899', note:'À renouveler chaque année.', statut:'Valide'},
+  ],
 };
 
 /* ============================================================
@@ -1305,6 +1351,25 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* tables génériques stockées en JSON (une ligne = {id, payload}) */
 const SYNCED_TABLES = ['dossiers','clients','factures','devis','depenses','banque','employes','pointage','acomptes','paie','rs','biat','recus'];
+
+/* ---- Nouveaux modules : Factures d'achat, Articles, Règlements MO, Dossier administratif ----
+   Ces tables tentent d'abord Supabase (si les tables existent côté serveur) puis
+   retombent silencieusement sur le stockage local du navigateur (localStorage). */
+const LOCAL_FALLBACK_TABLES = ['facturesAchat','articles','reglementsMO','docsAdmin'];
+LOCAL_FALLBACK_TABLES.forEach(t => { if(!SYNCED_TABLES.includes(t)) SYNCED_TABLES.push(t); });
+const LS_PREFIX = 'imc_table_';
+function localSaveTable(key){
+  try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(DB[key]||[])); }
+  catch(e){ console.warn('localStorage plein ou indisponible pour', key, e); }
+}
+function localLoadTable(key){
+  try{
+    const raw = localStorage.getItem(LS_PREFIX+key);
+    if(!raw) return null;
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : null;
+  }catch(e){ return null; }
+}
 
 /* charge toutes les tables métier depuis Supabase dans DB */
 async function fetchAllTables(){
@@ -1322,8 +1387,21 @@ async function fetchAllTables(){
   results.forEach((res, i) => {
     const key = SYNCED_TABLES[i];
     if(res.error){
+      if(LOCAL_FALLBACK_TABLES.includes(key)){
+        /* table absente côté Supabase : on bascule sur le stockage local sans alarmer l'utilisateur */
+        const local = localLoadTable(key);
+        if(local) DB[key] = local;
+        console.warn('Table "'+key+'" indisponible sur Supabase — utilisation du stockage local du navigateur.');
+        return;
+      }
       hadError = true;
       console.error('Erreur chargement', key, res.error);
+      return;
+    }
+    if(LOCAL_FALLBACK_TABLES.includes(key) && (res.data||[]).length===0){
+      /* serveur vide : on garde le local (ou les exemples de démonstration) */
+      const local = localLoadTable(key);
+      if(local) DB[key] = local;
       return;
     }
     DB[key] = (res.data || []).map(row => Object.assign({id: row.id}, row.payload));
@@ -1339,21 +1417,31 @@ async function fetchAllTables(){
 /* crée ou met à jour un enregistrement */
 async function dbUpsert(key, record){
   if(!SYNCED_TABLES.includes(key)) return;
+  if(LOCAL_FALLBACK_TABLES.includes(key)) localSaveTable(key); /* sauvegarde locale immédiate */
   const { id, ...payload } = record;
   const { error } = await sb.from(key).upsert({ id, payload, updated_at: new Date().toISOString() });
-  if(error){ console.error('Erreur sauvegarde', key, error); showToast('Erreur de synchronisation ('+key+')', true); }
+  if(error){
+    if(LOCAL_FALLBACK_TABLES.includes(key)){
+      console.warn('Sauvegarde locale uniquement pour', key, '(table Supabase absente)');
+      return;
+    }
+    console.error('Erreur sauvegarde', key, error); showToast('Erreur de synchronisation ('+key+')', true);
+  }
 }
 
 /* supprime un enregistrement */
 async function dbDelete(key, id){
   if(!SYNCED_TABLES.includes(key)) return { ok:true, skipped:true };
+  if(LOCAL_FALLBACK_TABLES.includes(key)) localSaveTable(key); /* DB en mémoire déjà mise à jour par l'appelant */
   const { data, error } = await sb.from(key).delete().eq('id', id).select('id');
   if(error){
+    if(LOCAL_FALLBACK_TABLES.includes(key)) return { ok:true, local:true };
     console.error('Erreur suppression', key, error);
     showToast('Suppression refusée par le serveur ('+key+') : '+(error.message||'voir console F12'), true);
     return { ok:false, error };
   }
   if(!data || data.length===0){
+    if(LOCAL_FALLBACK_TABLES.includes(key)) return { ok:true, local:true };
     console.warn('Suppression sans effet sur "'+key+'" (id '+id+') — probable policy RLS DELETE manquante côté Supabase.');
     showToast('Suppression non appliquée côté serveur ('+key+'). Vérifiez la policy RLS DELETE.', true);
     return { ok:false, noRows:true };
@@ -1391,7 +1479,14 @@ const STATUS_OPTS = {
   rs:       ['À déclarer','Déclarée','Payée'],
   biat:     ['Exécuté','Reçu','En attente'],
   recu:     ['Émis','Annulé'],
+  factureAchat: ['À payer','Payée','Partiellement payée','Litige'],
+  article:  ['Actif','Inactif'],
+  reglementMO: ['Réglé','En attente'],
+  docAdmin: ['Valide','À renouveler','Expiré'],
 };
+const ART_CATS  = ['Matériaux','Prestation','Location matériel','Consommable','Autre'];
+const ART_UNITES= ['u','sac','barre','m','m²','m³','kg','tonne','L','pot','jour','heure','forfait'];
+const DOC_CATS  = ['Registre de commerce','Matricule fiscal','CNSS','Assurance','Agrément / Autorisation','Contrat','Statuts société','Patente','Autre'];
 const TVA_OPTS = [0,5.5,10,19,20];
 const ROLE_OPTS = ['Administrateur','Comptable','Lecture seule'];
 const DEP_CATS  = ['Fournitures','Matériel','Transport','Sous-traitance','Charges','Autre'];
@@ -1422,6 +1517,9 @@ function statusClass(v){
     'En pause':'st-attente','Terminé':'st-accepte',
     /* facturation dépenses */
     'Facturable':'st-attente','Non facturable':'st-inactif','Facturée':'st-payee',
+    /* factures d'achat / articles / règlements MO / docs administratifs */
+    'À payer':'st-attente','Partiellement payée':'st-encours','Litige':'st-impayee',
+    'Réglé':'st-payee','Valide':'st-accepte','À renouveler':'st-attente','Expiré':'st-refuse',
   };
   return map[v] || 'st-brouillon';
 }
@@ -1445,6 +1543,8 @@ const DOSSIER_ACCESSOR = {
   recus:    r => dval(r.dossier),
   rs:       r => dval(r.dossier),
   biat:     r => dval(r.dossier),
+  facturesAchat: r => dval(r.dossier),
+  reglementsMO:  r => dval(r.dossier) || empChantier(r.employe),
 };
 function dossierRecords(nom){
   const pick = (key) => (DB[key]||[]).filter(r => DOSSIER_ACCESSOR[key](r) === nom);
@@ -1452,10 +1552,32 @@ function dossierRecords(nom){
     employes: pick('employes'), devis: pick('devis'), factures: pick('factures'),
     depenses: pick('depenses'), pointage: pick('pointage'), acomptes: pick('acomptes'),
     paie: pick('paie'), recus: pick('recus'), rs: pick('rs'), biat: pick('biat'),
+    facturesAchat: pick('facturesAchat'), reglementsMO: pick('reglementsMO'),
   };
 }
 const employeNames = () => DB.employes.map(e=>e.nom);
 const findEmp = nom => DB.employes.find(e=>e.nom===nom) || {};
+
+/* ---- Articles : liaison avec les lignes de factures & devis ---- */
+const articleNames = () => (DB.articles||[]).filter(a=>a.statut!=='Inactif').map(a=>a.designation);
+const findArticle = des => (DB.articles||[]).find(a => (a.designation||'').trim().toLowerCase() === String(des||'').trim().toLowerCase());
+/* combien de fois un article apparaît dans les lignes des factures et devis */
+function articleUsage(designation){
+  const d = String(designation||'').trim().toLowerCase();
+  let f=0, dv=0;
+  (DB.factures||[]).forEach(r => (r.lignes||[]).forEach(l => { if(String(l.designation||'').trim().toLowerCase()===d) f++; }));
+  (DB.devis||[]).forEach(r => (r.lignes||[]).forEach(l => { if(String(l.designation||'').trim().toLowerCase()===d) dv++; }));
+  return {factures:f, devis:dv};
+}
+/* liste des documents (factures / devis) qui utilisent un article */
+function articleDocs(designation){
+  const d = String(designation||'').trim().toLowerCase();
+  const has = r => (r.lignes||[]).some(l => String(l.designation||'').trim().toLowerCase()===d);
+  return {
+    factures: (DB.factures||[]).filter(has),
+    devis: (DB.devis||[]).filter(has),
+  };
+}
 
 const ENTITIES = {
   dossiers: {
@@ -1857,6 +1979,147 @@ const ENTITIES = {
     ],
     defaults: ()=>({numero:nextRef('recus','REC'), date:toISO(new Date()), beneficiaire:'', objet:'', montant:0, mode:'Espèces', statut:'Émis'}),
   },
+
+  /* ===================== FACTURES D'ACHAT (FOURNISSEURS) ===================== */
+  facturesAchat: {
+    key:'facturesAchat', singular:"Facture d'achat", plural:"Factures d'achat",
+    icon:'fa-cart-shopping', subtitle:'Classez toutes les factures de vos fournisseurs, avec pièce jointe (photo / PDF).',
+    label: r => r.numero + (r.fournisseur ? ' — '+r.fournisseur : ''),
+    columns:[
+      {h:'N° Facture', render:r=>`<span class="cell-strong">${escapeHtml(r.numero)}</span>${r.pieceJointe?` <i class="fa-solid fa-paperclip pj-open" data-pj-entity="facturesAchat" data-pj-id="${r.id}" title="Ouvrir : ${escapeHtml(r.pieceJointe)}" style="color:var(--gold-dark);font-size:11px;cursor:pointer;"></i>`:''}`},
+      {h:'Fournisseur', render:r=>escapeHtml(r.fournisseur||'—')},
+      {h:'Dossier', render:r=>escapeHtml(dval(r.dossier)||'—')},
+      {h:'Objet', render:r=>escapeHtml(r.objet||'—')},
+      {h:'Date', render:r=>fmtDate(r.dateFacture)},
+      {h:'Échéance', render:r=>fmtDate(r.dateEcheance)},
+      {h:'Montant TTC', cls:'cell-amt', render:r=>dt(r.montantTTC)},
+      {h:'Statut', render:r=>`<span class="badge-status ${statusClass(r.statut)}">${escapeHtml(r.statut)}</span>`},
+    ],
+    search:r=>[r.numero,r.fournisseur,r.objet,r.dossier,r.statut].join(' ').toLowerCase(),
+    fields:[
+      {k:'numero', label:'N° de facture fournisseur', type:'text', required:true},
+      {k:'fournisseur', label:'Fournisseur', type:'text', required:true},
+      {k:'dossier', label:'Dossier / Chantier', type:'select', options:dossierOpts},
+      {k:'objet', label:'Objet de la facture', type:'text', full:true},
+      {k:'dateFacture', label:'Date de la facture', type:'date'},
+      {k:'dateEcheance', label:"Date d'échéance", type:'date'},
+      {k:'montantHT', label:'Montant HT (DT)', type:'number', step:'0.001'},
+      {k:'tva', label:'TVA (%)', type:'select', options:TVA_OPTS},
+      {k:'mode', label:'Mode de paiement', type:'select', options:MODE_PAIE},
+      {k:'statut', label:'Statut', type:'select', options:STATUS_OPTS.factureAchat},
+      {k:'note', label:'Remarques', type:'textarea', full:true},
+    ],
+    compute: r => { r.montantHT=Number(r.montantHT)||0; r.tva=Number(r.tva)||0; r.montantTTC = +(r.montantHT*(1+r.tva/100)).toFixed(3); return r; },
+    defaults: ()=>({numero:nextNum('facturesAchat','FA'), fournisseur:'', dossier:dossierNames()[0]||'—', objet:'', dateFacture:toISO(new Date()), dateEcheance:'', montantHT:0, tva:19, montantTTC:0, mode:'Virement BIAT', statut:'À payer', note:''}),
+  },
+
+  /* ===================== ARTICLES (liés aux factures & devis) ===================== */
+  articles: {
+    key:'articles', singular:'Article', plural:'Articles',
+    icon:'fa-boxes-stacked', subtitle:'Catalogue des articles et prestations : saisissez la désignation une seule fois, elle se remplit automatiquement dans les lignes de vos factures et devis.',
+    label: r => r.designation,
+    columns:[
+      {h:'Référence', render:r=>`<span class="cell-strong">${escapeHtml(r.reference||'—')}</span>`},
+      {h:'Désignation', render:r=>escapeHtml(r.designation)},
+      {h:'Catégorie', render:r=>escapeHtml(r.categorie||'—')},
+      {h:'Unité', render:r=>escapeHtml(r.unite||'—')},
+      {h:'Prix achat', cls:'cell-amt', render:r=>dt(r.prixAchat)},
+      {h:'Prix vente HT', cls:'cell-amt', render:r=>dt(r.prixHT)},
+      {h:'Utilisé dans', render:r=>{
+        const u = articleUsage(r.designation);
+        return `<span style="font-size:12px;color:var(--text-muted)">${u.factures} facture(s) · ${u.devis} devis</span>`;
+      }},
+      {h:'Statut', render:r=>`<span class="badge-status ${statusClass(r.statut)}">${escapeHtml(r.statut)}</span>`},
+    ],
+    search:r=>[r.reference,r.designation,r.categorie,r.unite].join(' ').toLowerCase(),
+    fields:[
+      {k:'reference', label:'Référence', type:'text'},
+      {k:'designation', label:'Désignation', type:'text', required:true, full:true},
+      {k:'categorie', label:'Catégorie', type:'select', options:ART_CATS},
+      {k:'unite', label:'Unité', type:'select', options:ART_UNITES},
+      {k:'prixAchat', label:"Prix d'achat (DT)", type:'number', step:'0.001'},
+      {k:'prixHT', label:'Prix de vente HT (DT)', type:'number', step:'0.001'},
+      {k:'tva', label:'TVA (%)', type:'select', options:TVA_OPTS},
+      {k:'statut', label:'Statut', type:'select', options:STATUS_OPTS.article},
+      {k:'note', label:'Description / note', type:'textarea', full:true},
+    ],
+    defaults: ()=>({reference:nextRef('articles','ART'), designation:'', categorie:'Matériaux', unite:'u', prixAchat:0, prixHT:0, tva:19, statut:'Actif', note:''}),
+  },
+
+  /* ===================== RÈGLEMENTS MAIN D'ŒUVRE ===================== */
+  reglementsMO: {
+    key:'reglementsMO', singular:"Règlement main d'œuvre", plural:"Règlements main d'œuvre",
+    icon:'fa-money-check-dollar', subtitle:'Paiements de la main d\'œuvre par ouvrier, par période et par chantier.',
+    label: r => (r.reference||'RMO') + ' — ' + (r.employe||''),
+    columns:[
+      {h:'Référence', render:r=>`<span class="cell-strong">${escapeHtml(r.reference||'—')}</span>`},
+      {h:'Ouvrier / Employé', render:r=>escapeHtml(r.employe||'—')},
+      {h:'Dossier / Chantier', render:r=>escapeHtml(dval(r.dossier)||empChantier(r.employe)||'—')},
+      {h:'Période', render:r=>escapeHtml(r.periode||'—')},
+      {h:'Jours', render:r=>String(r.jours||0)},
+      {h:'Date paiement', render:r=>fmtDate(r.date)},
+      {h:'Montant', cls:'cell-amt', render:r=>dt(r.montant)},
+      {h:'Mode', render:r=>escapeHtml(r.mode||'—')},
+      {h:'Statut', render:r=>`<span class="badge-status ${statusClass(r.statut)}">${escapeHtml(r.statut)}</span>`},
+    ],
+    search:r=>[r.reference,r.employe,r.dossier,r.periode,r.mode,r.statut].join(' ').toLowerCase(),
+    fields:[
+      {k:'reference', label:'Référence', type:'text'},
+      {k:'employe', label:'Ouvrier / Employé', type:'select', options:employeNames, required:true},
+      {k:'dossier', label:'Dossier / Chantier', type:'select', options:dossierOpts},
+      {k:'periode', label:'Période travaillée (ex. Semaine 22, Mai 2024…)', type:'text', full:true},
+      {k:'jours', label:'Nombre de jours', type:'number', step:'0.5'},
+      {k:'tauxJour', label:'Taux journalier (DT) — auto depuis la fiche employé', type:'number', step:'0.001'},
+      {k:'montant', label:'Montant réglé (DT)', type:'number', step:'0.001', required:true},
+      {k:'date', label:'Date du paiement', type:'date'},
+      {k:'mode', label:'Mode de paiement', type:'select', options:MODE_PAIE},
+      {k:'statut', label:'Statut', type:'select', options:STATUS_OPTS.reglementMO},
+      {k:'note', label:'Remarques', type:'textarea', full:true},
+    ],
+    compute: r => {
+      r.jours = Number(r.jours)||0; r.tauxJour = Number(r.tauxJour)||0; r.montant = Number(r.montant)||0;
+      /* si le montant n'a pas été saisi mais jours × taux le sont, on le calcule automatiquement */
+      if(!r.montant && r.jours && r.tauxJour) r.montant = +(r.jours*r.tauxJour).toFixed(3);
+      return r;
+    },
+    defaults: ()=>{
+      const emp = DB.employes[0]||{};
+      return {reference:nextRef('reglementsMO','RMO'), employe:emp.nom||'', dossier:emp.chantier||dossierNames()[0]||'—', periode:'', jours:6, tauxJour:emp.tauxJour||0, montant:0, date:toISO(new Date()), mode:'Espèces', statut:'Réglé', note:''};
+    },
+  },
+
+  /* ===================== DOSSIER ADMINISTRATIF ===================== */
+  docsAdmin: {
+    key:'docsAdmin', singular:'Document administratif', plural:'Dossier administratif',
+    icon:'fa-folder-tree', subtitle:'Importez et classez les documents administratifs de la société (RC, matricule fiscal, CNSS, assurances…).',
+    label: r => r.titre,
+    columns:[
+      {h:'Document', render:r=>`<span class="cell-strong">${escapeHtml(r.titre)}</span>${r.pieceJointe?` <i class="fa-solid fa-paperclip pj-open" data-pj-entity="docsAdmin" data-pj-id="${r.id}" title="Ouvrir : ${escapeHtml(r.pieceJointe)}" style="color:var(--gold-dark);font-size:11px;cursor:pointer;"></i>`:''}`},
+      {h:'Catégorie', render:r=>escapeHtml(r.categorie||'—')},
+      {h:'Référence', render:r=>escapeHtml(r.reference||'—')},
+      {h:'Date du document', render:r=>fmtDate(r.dateDoc)},
+      {h:'Expiration', render:r=>{
+        if(!r.dateExpiration) return '—';
+        const exp = new Date(r.dateExpiration), now = new Date();
+        const soon = (exp - now) / 86400000;
+        const cls = soon < 0 ? 'st-refuse' : (soon < 30 ? 'st-attente' : 'st-accepte');
+        return `<span class="badge-status ${cls}">${fmtDate(r.dateExpiration)}</span>`;
+      }},
+      {h:'Fichier', render:r=>r.pieceJointe?escapeHtml(r.pieceJointe):'<span style="color:var(--text-muted)">Aucun</span>'},
+      {h:'Statut', render:r=>`<span class="badge-status ${statusClass(r.statut)}">${escapeHtml(r.statut)}</span>`},
+    ],
+    search:r=>[r.titre,r.categorie,r.reference,r.note].join(' ').toLowerCase(),
+    fields:[
+      {k:'titre', label:'Titre du document', type:'text', required:true, full:true},
+      {k:'categorie', label:'Catégorie', type:'select', options:DOC_CATS},
+      {k:'reference', label:'N° / Référence du document', type:'text'},
+      {k:'dateDoc', label:'Date du document', type:'date'},
+      {k:'dateExpiration', label:"Date d'expiration (si applicable)", type:'date'},
+      {k:'statut', label:'Statut', type:'select', options:STATUS_OPTS.docAdmin},
+      {k:'note', label:'Note', type:'textarea', full:true},
+    ],
+    defaults: ()=>({titre:'', categorie:'Registre de commerce', reference:'', dateDoc:toISO(new Date()), dateExpiration:'', statut:'Valide', note:''}),
+  },
 };
 
 /* auto-increment number for factures/devis */
@@ -1929,6 +2192,8 @@ function renderCrudPage(name){
         <button class="btn-ghost" id="export-${name}"><i class="fa-solid fa-file-arrow-down"></i> Exporter CSV</button>
         <button class="btn-ghost" id="exportpdf-${name}"><i class="fa-solid fa-file-pdf"></i> Exporter PDF</button>
         ${name==='depenses' && authCanWrite(name, true) ? `<button class="btn-ghost" id="importfac-${name}"><i class="fa-solid fa-file-import"></i> Importer facture</button>` : ''}
+        ${name==='facturesAchat' && authCanWrite(name, true) ? `<button class="btn-ghost" id="importfa-${name}"><i class="fa-solid fa-file-import"></i> Importer facture (photo / PDF)</button>` : ''}
+        ${name==='docsAdmin' && authCanWrite(name, true) ? `<button class="btn-ghost" id="importdoc-${name}"><i class="fa-solid fa-cloud-arrow-up"></i> Importer un document</button>` : ''}
         ${authCanWrite(name, true) ? `<button class="btn-primary" id="add-${name}"><i class="fa-solid fa-plus"></i> Nouveau ${escapeHtml(cfg.singular.toLowerCase())}</button>` : ''}
       </div>
     </div>
@@ -1945,6 +2210,10 @@ function renderCrudPage(name){
   if(addBtn) addBtn.addEventListener('click', ()=> openForm(name, null));
   const importFacBtn = $('#importfac-'+name);
   if(importFacBtn) importFacBtn.addEventListener('click', ()=> importFactureDepense());
+  const importFaBtn = $('#importfa-'+name);
+  if(importFaBtn) importFaBtn.addEventListener('click', ()=> importFichierVers('facturesAchat'));
+  const importDocBtn = $('#importdoc-'+name);
+  if(importDocBtn) importDocBtn.addEventListener('click', ()=> importFichierVers('docsAdmin'));
   $('#export-'+name).addEventListener('click', ()=> exportCSV(name));
   $('#exportpdf-'+name).addEventListener('click', ()=> pdfTable(name));
   $('#print-'+name).addEventListener('click', ()=> printTable(name));
@@ -1973,6 +2242,36 @@ function importFactureDepense(){
     rec.facturation = 'Facturée';
     const openWith = ()=> openForm('depenses', rec);
     // lit le contenu du fichier pour pouvoir le consulter / télécharger ensuite
+    if(file.size <= 8*1024*1024){
+      const reader = new FileReader();
+      reader.onload = ()=>{ rec.pieceJointeData = reader.result; openWith(); };
+      reader.onerror = ()=>{ showToast('Impossible de lire le fichier « '+file.name+' »', true); openWith(); };
+      reader.readAsDataURL(file);
+    } else {
+      showToast('Fichier trop volumineux (> 8 Mo) : il sera référencé sans aperçu', true);
+      openWith();
+    }
+  });
+  input.click();
+}
+
+/* Import générique d'un fichier (photo / PDF / scan) vers une entité :
+   ouvre le formulaire "Nouveau" pré-rempli avec la pièce jointe. */
+function importFichierVers(name){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,.pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx';
+  input.addEventListener('change', ()=>{
+    const file = input.files && input.files[0];
+    if(!file) return;
+    const rec = ENTITIES[name].defaults();
+    const baseName = file.name.replace(/\.[^.]+$/, '');
+    if(name==='facturesAchat'){ rec.objet = rec.objet || ('Facture importée — ' + baseName); }
+    if(name==='docsAdmin'){ rec.titre = baseName; }
+    rec.pieceJointe = file.name;
+    rec.pieceJointeType = file.type || 'application/octet-stream';
+    rec.pieceJointeTaille = file.size;
+    const openWith = ()=> openForm(name, rec);
     if(file.size <= 8*1024*1024){
       const reader = new FileReader();
       reader.onload = ()=>{ rec.pieceJointeData = reader.result; openWith(); };
@@ -2096,6 +2395,26 @@ function renderStats(name){
     const tot = rows.reduce((s,r)=>s+(+r.montant||0),0);
     const emis = rows.filter(r=>r.statut==='Émis').length;
     html = strip([{l:'Reçus',v:rows.length},{l:'Montant total',v:euro(tot)},{l:'Émis',v:emis},{l:'Annulés',v:rows.filter(r=>r.statut==='Annulé').length}]);
+  } else if(name==='facturesAchat'){
+    const tot = rows.reduce((s,r)=>s+(+r.montantTTC||0),0);
+    const apayer = rows.filter(r=>r.statut!=='Payée').reduce((s,r)=>s+(+r.montantTTC||0),0);
+    html = strip([{l:"Factures d'achat",v:rows.length},{l:'Montant total TTC',v:dt(tot)},{l:'Payées',v:rows.filter(r=>r.statut==='Payée').length},{l:'Reste à payer',v:dt(apayer)}]);
+  } else if(name==='articles'){
+    const actifs = rows.filter(r=>r.statut!=='Inactif').length;
+    let usages = 0;
+    rows.forEach(r=>{ const u=articleUsage(r.designation); usages += u.factures + u.devis; });
+    html = strip([{l:'Articles',v:rows.length},{l:'Actifs',v:actifs},{l:'Catégories',v:new Set(rows.map(r=>r.categorie||'—')).size},{l:'Utilisations (fact.+devis)',v:usages}]);
+  } else if(name==='reglementsMO'){
+    const tot = rows.reduce((s,r)=>s+(+r.montant||0),0);
+    const att = rows.filter(r=>r.statut==='En attente').reduce((s,r)=>s+(+r.montant||0),0);
+    const jours = rows.reduce((s,r)=>s+(+r.jours||0),0);
+    html = strip([{l:'Règlements',v:rows.length},{l:'Montant total',v:dt(tot)},{l:'Jours payés',v:jours},{l:'En attente',v:dt(att)}]);
+  } else if(name==='docsAdmin'){
+    const now = new Date();
+    const expSoon = rows.filter(r=>{ if(!r.dateExpiration) return false; const d=(new Date(r.dateExpiration)-now)/86400000; return d>=0 && d<30; }).length;
+    const expired = rows.filter(r=> r.dateExpiration && new Date(r.dateExpiration) < now).length;
+    const avecPJ = rows.filter(r=>r.pieceJointe).length;
+    html = strip([{l:'Documents',v:rows.length},{l:'Avec fichier joint',v:avecPJ},{l:'Expirent < 30 j',v:expSoon},{l:'Expirés',v:expired}]);
   }
   box.innerHTML = html;
 }
@@ -2117,7 +2436,7 @@ function lignesTotalHT(lignes){
 function ligneRowHTML(l){
   l = l || {designation:'', qte:1, pu:0, remise:0};
   return `<tr class="ligne-row">
-    <td><input type="text" class="lg-des" placeholder="Désignation" value="${escapeHtml(l.designation||'')}" style="width:100%;min-width:160px;"></td>
+    <td><input type="text" class="lg-des" list="articlesDL" placeholder="Désignation (choisir un article ou saisir)" value="${escapeHtml(l.designation||'')}" style="width:100%;min-width:160px;"></td>
     <td><input type="number" class="lg-qte" step="0.01" min="0" value="${Number(l.qte)||0}" style="width:70px;text-align:right;"></td>
     <td><input type="number" class="lg-pu" step="0.001" min="0" value="${Number(l.pu)||0}" style="width:100px;text-align:right;"></td>
     <td><input type="number" class="lg-rem" step="0.01" min="0" max="100" value="${Number(l.remise)||0}" style="width:70px;text-align:right;"></td>
@@ -2128,8 +2447,11 @@ function ligneRowHTML(l){
 function buildLignesEditor(lignes){
   lignes = Array.isArray(lignes) ? lignes : [];
   const rows = lignes.length ? lignes.map(ligneRowHTML).join('') : ligneRowHTML();
+  const artOpts = articleNames().map(n=>`<option value="${escapeHtml(n)}">`).join('');
   return `<div class="field full">
     <label>Lignes (articles / prestations)</label>
+    <datalist id="articlesDL">${artOpts}</datalist>
+    <div style="font-size:12px;color:var(--text-muted);margin:-2px 0 6px;"><i class="fa-solid fa-boxes-stacked" style="color:var(--gold-dark);"></i> Astuce : tapez le nom d'un <b>article</b> du catalogue — le prix unitaire se remplit automatiquement.</div>
     <div id="lignesEditor" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card-solid);overflow-x:auto;">
       <table id="lignesTable" style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;">
@@ -2187,7 +2509,22 @@ function refreshLignesTotals(){
 }
 function wireLignesEditor(){
   const ed = $('#lignesEditor'); if(!ed) return;
-  ed.addEventListener('input', refreshLignesTotals);
+  ed.addEventListener('input', e=>{
+    /* liaison catalogue d'articles : remplit le prix unitaire automatiquement */
+    if(e.target && e.target.classList.contains('lg-des')){
+      const art = findArticle(e.target.value);
+      if(art){
+        const puInput = e.target.closest('tr').querySelector('.lg-pu');
+        if(puInput && (!Number(puInput.value) || puInput.dataset.autofill==='1')){
+          puInput.value = Number(art.prixHT)||0;
+          puInput.dataset.autofill = '1';
+        }
+      }
+    }
+    /* si l'utilisateur modifie lui-même le prix, on ne l'écrase plus */
+    if(e.target && e.target.classList.contains('lg-pu')) e.target.dataset.autofill = '0';
+    refreshLignesTotals();
+  });
   ed.addEventListener('click', e=>{
     const del = e.target.closest('.lg-del');
     if(del){ del.closest('tr').remove(); refreshLignesTotals(); }
@@ -2238,6 +2575,21 @@ function openForm(name, id){
   $('#formFields').innerHTML = cfg.fields.map(f=> buildField(f, record[f.k])).join('');
   // live TTC recompute for factures/devis (lignes editor)
   wireLignesEditor();
+  // Règlement main d'œuvre : taux auto depuis la fiche employé + montant = jours × taux
+  if(name==='reglementsMO'){
+    const empSel = $('#f_employe'), taux = $('#f_tauxJour'), jours = $('#f_jours'), mont = $('#f_montant'), dos = $('#f_dossier');
+    const recalc = ()=>{ const m = (Number(jours?.value)||0)*(Number(taux?.value)||0); if(mont && m>0) mont.value = +m.toFixed(3); };
+    if(empSel){
+      empSel.addEventListener('change', ()=>{
+        const e = findEmp(empSel.value);
+        if(taux && e.tauxJour) taux.value = e.tauxJour;
+        if(dos && e.chantier){ const opt = Array.from(dos.options).find(o=>o.value===e.chantier); if(opt) dos.value = e.chantier; }
+        recalc();
+      });
+    }
+    jours?.addEventListener('input', recalc);
+    taux?.addEventListener('input', recalc);
+  }
   openModal(formModal);
   const first = $('#formFields input, #formFields select, #formFields textarea');
   if(first) setTimeout(()=>first.focus(), 60);
@@ -2344,6 +2696,20 @@ function openDetail(name, id){
     }
   }
   // Bloc pièce jointe (voir / supprimer) — pour toute entité qui en a une
+  /* Article : liste des factures et devis qui utilisent cet article */
+  if(name==='articles'){
+    const docs = articleDocs(r.designation);
+    const li = (arr, ent, ico) => arr.length
+      ? arr.map(d=>`<span class="badge-status st-encours art-doc-link" data-ent="${ent}" data-id="${d.id}" style="cursor:pointer;margin:2px 4px 2px 0;display:inline-block;"><i class="fa-solid ${ico}" style="margin-right:5px;"></i>${escapeHtml(d.numero)} · ${escapeHtml(d.client||'')}</span>`).join('')
+      : '<span style="color:var(--text-muted);font-size:12.5px;">Aucun</span>';
+    $('#detailFields').insertAdjacentHTML('beforeend', `
+      <div class="detail-item full"><span class="dl">Utilisé dans les factures</span><div style="margin-top:4px;">${li(docs.factures,'factures','fa-file-invoice')}</div></div>
+      <div class="detail-item full"><span class="dl">Utilisé dans les devis</span><div style="margin-top:4px;">${li(docs.devis,'devis','fa-file-signature')}</div></div>`);
+    $$('#detailFields .art-doc-link').forEach(el=> el.addEventListener('click', ()=>{
+      closeModal(detailModal);
+      setTimeout(()=> openDetail(el.dataset.ent, el.dataset.id), 180);
+    }));
+  }
   if(r.pieceJointe){
     const canWrite = authCanWrite(name, true);
     const pjHtml = `<div class="detail-item full"><span class="dl">Pièce jointe</span>
@@ -2357,12 +2723,35 @@ function openDetail(name, id){
     if(openBtn) openBtn.addEventListener('click', ()=> openPieceJointe(name, id));
     const delBtn = $('#pjDeleteDetail');
     if(delBtn) delBtn.addEventListener('click', ()=>{
-      if(!confirm('Supprimer la pièce jointe « '+r.pieceJointe+' » ? La dépense sera conservée.')) return;
+      if(!confirm('Supprimer la pièce jointe « '+r.pieceJointe+' » ? L\'enregistrement sera conservé.')) return;
       delete r.pieceJointe; delete r.pieceJointeData; delete r.pieceJointeType; delete r.pieceJointeTaille;
       dbUpsert(cfg.key, r);
       showToast('Pièce jointe supprimée');
       closeModal(detailModal);
       if($('#page-'+name)?.classList.contains('active')) renderCrudPage(name);
+    });
+  } else if((name==='docsAdmin' || name==='facturesAchat') && authCanWrite(name, true)){
+    /* pas encore de fichier : proposer de joindre un scan / photo / PDF directement depuis la fiche */
+    $('#detailFields').insertAdjacentHTML('beforeend', `<div class="detail-item full"><span class="dl">Pièce jointe</span>
+      <div style="margin-top:4px;"><button class="btn-ghost" id="pjAttachDetail" style="padding:5px 12px;font-size:12.5px;"><i class="fa-solid fa-paperclip"></i> Joindre un fichier (photo / PDF)</button></div></div>`);
+    $('#pjAttachDetail')?.addEventListener('click', ()=>{
+      const input = document.createElement('input');
+      input.type='file'; input.accept='image/*,.pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx';
+      input.addEventListener('change', ()=>{
+        const file = input.files && input.files[0];
+        if(!file) return;
+        r.pieceJointe = file.name;
+        r.pieceJointeType = file.type||'application/octet-stream';
+        r.pieceJointeTaille = file.size;
+        const done = ()=>{ dbUpsert(cfg.key, r); showToast('Fichier joint avec succès'); closeModal(detailModal); if($('#page-'+name)?.classList.contains('active')) renderCrudPage(name); };
+        if(file.size <= 8*1024*1024){
+          const reader = new FileReader();
+          reader.onload = ()=>{ r.pieceJointeData = reader.result; done(); };
+          reader.onerror = ()=>{ showToast('Impossible de lire le fichier', true); done(); };
+          reader.readAsDataURL(file);
+        } else { showToast('Fichier trop volumineux (> 8 Mo) : référencé sans aperçu', true); done(); }
+      });
+      input.click();
     });
   }
   openModal(detailModal);
@@ -2498,6 +2887,16 @@ function openDossier(id){
       ['Libellé','Catégorie','Date','Montant','Statut'],
       R.depenses.map(x=>`<tr><td class="cell-strong">${escapeHtml(x.libelle)}</td><td>${escapeHtml(x.categorie||'—')}</td><td>${fmtDate(x.date)}</td><td class="cell-amt">${euro(x.montant)}</td><td>${stBadge(x.statut)}</td></tr>`).join(''),
       'Aucune dépense sur ce dossier.')}
+
+    ${dossierPanel("Factures d'achat ("+(R.facturesAchat||[]).length+')','fa-cart-shopping',
+      ['N°','Fournisseur','Objet','Date','Montant TTC','Statut'],
+      (R.facturesAchat||[]).map(x=>`<tr><td class="cell-strong">${escapeHtml(x.numero)}</td><td>${escapeHtml(x.fournisseur||'—')}</td><td>${escapeHtml(x.objet||'—')}</td><td>${fmtDate(x.dateFacture)}</td><td class="cell-amt">${dt(x.montantTTC)}</td><td>${stBadge(x.statut)}</td></tr>`).join(''),
+      "Aucune facture d'achat rattachée à ce dossier.")}
+
+    ${dossierPanel("Règlements main d'œuvre ("+(R.reglementsMO||[]).length+')','fa-money-check-dollar',
+      ['Référence','Employé','Période','Jours','Montant','Statut'],
+      (R.reglementsMO||[]).map(x=>`<tr><td class="cell-strong">${escapeHtml(x.reference||'—')}</td><td>${escapeHtml(x.employe||'—')}</td><td>${escapeHtml(x.periode||'—')}</td><td>${x.jours||0}</td><td class="cell-amt">${dt(x.montant)}</td><td>${stBadge(x.statut)}</td></tr>`).join(''),
+      "Aucun règlement de main d'œuvre sur ce dossier.")}
 
     ${dossierPanel('Pointage — '+K.jours+' jour(s) cumulés','fa-clock',
       ['Employé','Date','Jours','Heures','H. sup.','Statut'],
@@ -3040,8 +3439,12 @@ const PAGE_META = {
   biat:         {title:'Intégration BIAT',     sub:'Flux du compte BIAT et rapprochement.'},
   recus:        {title:'Reçus',                sub:'Reçus de paiement émis.'},
   hebdo:        {title:'Rapport hebdomadaire', sub:'Synthèse de la semaine en cours.'},
+  facturesAchat:{title:"Factures d'achat",     sub:'Classez les factures de vos fournisseurs, avec pièce jointe.'},
+  articles:     {title:'Articles',             sub:'Catalogue lié aux lignes de factures et de devis.'},
+  reglementsMO: {title:"Règlement main d'œuvre", sub:'Paiements de la main d\'œuvre par ouvrier et par chantier.'},
+  docsAdmin:    {title:'Dossier administratif', sub:'Documents administratifs de la société, importés et classés.'},
 };
-const CRUD_PAGES = ['dossiers','clients','factures','devis','depenses','banque','utilisateurs','employes','pointage','acomptes','paie','rs','biat','recus'];
+const CRUD_PAGES = ['dossiers','clients','factures','devis','depenses','banque','utilisateurs','employes','pointage','acomptes','paie','rs','biat','recus','facturesAchat','articles','reglementsMO','docsAdmin'];
 const INFO_PAGES = ['rapports','import','parametres','aide','dashboard2','hebdo'];
 const builtInfo = {};
 
