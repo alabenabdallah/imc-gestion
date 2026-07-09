@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1248,18 +1249,9 @@ const DB = {
     {id:uid(), nom:'Auto-entrepreneur Leroy', contact:'Marie Leroy', email:'m.leroy@gmail.com', tel:'06 12 34 56 78', dossier:'Dossier D', montant:7000, statut:'Actif', adresse:'3 place Bellecour, 69002 Lyon'},
     {id:uid(), nom:'Immobilier Rousseau', contact:'Luc Rousseau', email:'l.rousseau@rousseau-immo.fr', tel:'05 56 88 99 00', dossier:'Dossier E', montant:0, statut:'Inactif', adresse:'21 quai des Chartrons, 33000 Bordeaux'},
   ],
-  factures: [
-    {id:uid(), numero:'F2024-0056', client:'Entreprise Dupont', dossier:'Dossier A',  dateEmission:'2024-05-28', dateEcheance:'2024-06-27', montantHT:2041.67, tva:20, montantTTC:2450, statut:'Envoyée'},
-    {id:uid(), numero:'F2024-0055', client:'Société Martin', dossier:'Dossier B',  dateEmission:'2024-05-20', dateEcheance:'2024-06-19', montantHT:3750, tva:20, montantTTC:4500, statut:'Payée'},
-    {id:uid(), numero:'F2024-0054', client:'SARL Bernard', dossier:'Dossier C',  dateEmission:'2024-05-15', dateEcheance:'2024-06-14', montantHT:1500, tva:20, montantTTC:1800, statut:'Payée'},
-    {id:uid(), numero:'F2024-0053', client:'Auto-entrepreneur Leroy', dossier:'Dossier D',  dateEmission:'2024-05-10', dateEcheance:'2024-05-25', montantHT:980, tva:20, montantTTC:1176, statut:'Impayée'},
-  ],
-  devis: [
-    {id:uid(), numero:'D2024-0042', client:'Société Martin', dossier:'Dossier B',  dateEmission:'2024-05-27', validite:'2024-06-27', montantHT:1541.67, tva:20, montantTTC:1850, statut:'Accepté'},
-    {id:uid(), numero:'D2024-0041', client:'Entreprise Dupont', dossier:'Dossier A',  dateEmission:'2024-05-22', validite:'2024-06-22', montantHT:5000, tva:20, montantTTC:6000, statut:'Envoyé'},
-    {id:uid(), numero:'D2024-0040', client:'SARL Bernard', dossier:'Dossier C',  dateEmission:'2024-05-18', validite:'2024-06-18', montantHT:2200, tva:20, montantTTC:2640, statut:'Refusé'},
-    {id:uid(), numero:'D2024-0039', client:'Immobilier Rousseau', dossier:'Dossier E',  dateEmission:'2024-05-12', validite:'2024-06-12', montantHT:8000, tva:20, montantTTC:9600, statut:'Brouillon'},
-  ],
+  /* Anciennes données de démonstration supprimées — les chiffres seront saisis directement dans l'application */
+  factures: [],
+  devis: [],
   depenses: [
     {id:uid(), libelle:'Achat fournitures bureau', categorie:'Fournitures', dossier:'Dossier A', date:'2024-05-27', montant:120.50, fournisseur:'Bureau Vallée', facturation:'Non facturable', statut:'Payée'},
     {id:uid(), libelle:'Location matériel chantier', categorie:'Matériel', dossier:'Dossier B', date:'2024-05-24', montant:1850, fournisseur:'Loxam', facturation:'Facturable', statut:'Payée'},
@@ -2434,10 +2426,12 @@ function lignesTotalHT(lignes){
   return +(lignes||[]).reduce((s,l)=> s + ligneTotal(l), 0).toFixed(3);
 }
 function ligneRowHTML(l){
-  l = l || {designation:'', qte:1, pu:0, remise:0};
+  l = l || {reference:'', designation:'', qte:1, unite:'', pu:0, remise:0};
   return `<tr class="ligne-row">
+    <td><input type="text" class="lg-ref" placeholder="Réf." value="${escapeHtml(l.reference||'')}" style="width:90px;"></td>
     <td><input type="text" class="lg-des" list="articlesDL" placeholder="Désignation (choisir un article ou saisir)" value="${escapeHtml(l.designation||'')}" style="width:100%;min-width:160px;"></td>
     <td><input type="number" class="lg-qte" step="0.01" min="0" value="${Number(l.qte)||0}" style="width:70px;text-align:right;"></td>
+    <td><input type="text" class="lg-unite" placeholder="pcs" value="${escapeHtml(l.unite||'')}" style="width:64px;text-align:center;"></td>
     <td><input type="number" class="lg-pu" step="0.001" min="0" value="${Number(l.pu)||0}" style="width:100px;text-align:right;"></td>
     <td><input type="number" class="lg-rem" step="0.01" min="0" max="100" value="${Number(l.remise)||0}" style="width:70px;text-align:right;"></td>
     <td class="lg-tot" style="text-align:right;font-weight:700;white-space:nowrap;">${dt(ligneTotal(l))}</td>
@@ -2455,9 +2449,11 @@ function buildLignesEditor(lignes){
     <div id="lignesEditor" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card-solid);overflow-x:auto;">
       <table id="lignesTable" style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;">
-          <th style="text-align:left;padding:4px 6px;">Désignation</th>
-          <th style="text-align:right;padding:4px 6px;">Qté</th>
-          <th style="text-align:right;padding:4px 6px;">Prix U.</th>
+          <th style="text-align:left;padding:4px 6px;">Référence</th>
+          <th style="text-align:left;padding:4px 6px;">Description</th>
+          <th style="text-align:right;padding:4px 6px;">Quantité</th>
+          <th style="text-align:center;padding:4px 6px;">Unité</th>
+          <th style="text-align:right;padding:4px 6px;">Prix unitaire</th>
           <th style="text-align:right;padding:4px 6px;">Remise %</th>
           <th style="text-align:right;padding:4px 6px;">Total HT</th>
           <th style="width:36px;"></th>
@@ -2476,8 +2472,10 @@ function buildLignesEditor(lignes){
 function collectLignesFromEditor(){
   const body = $('#lignesBody'); if(!body) return [];
   return Array.from(body.querySelectorAll('tr.ligne-row')).map(tr=>({
+    reference: (tr.querySelector('.lg-ref')?.value||'').trim(),
     designation: tr.querySelector('.lg-des').value.trim(),
     qte: Number(tr.querySelector('.lg-qte').value)||0,
+    unite: (tr.querySelector('.lg-unite')?.value||'').trim(),
     pu: Number(tr.querySelector('.lg-pu').value)||0,
     remise: Number(tr.querySelector('.lg-rem').value)||0,
   })).filter(l=> l.designation !== '' || l.pu>0);
@@ -2514,11 +2512,16 @@ function wireLignesEditor(){
     if(e.target && e.target.classList.contains('lg-des')){
       const art = findArticle(e.target.value);
       if(art){
-        const puInput = e.target.closest('tr').querySelector('.lg-pu');
+        const tr = e.target.closest('tr');
+        const puInput = tr.querySelector('.lg-pu');
         if(puInput && (!Number(puInput.value) || puInput.dataset.autofill==='1')){
           puInput.value = Number(art.prixHT)||0;
           puInput.dataset.autofill = '1';
         }
+        const uInput = tr.querySelector('.lg-unite');
+        if(uInput && !uInput.value.trim()) uInput.value = art.unite||'';
+        const refInput = tr.querySelector('.lg-ref');
+        if(refInput && !refInput.value.trim()) refInput.value = art.reference||'';
       }
     }
     /* si l'utilisateur modifie lui-même le prix, on ne l'écrase plus */
@@ -2659,12 +2662,12 @@ function openDetail(name, id){
     if(f.type==='lignes'){
       const lignes = Array.isArray(v) ? v : [];
       if(!lignes.length) return '';
-      const rows = lignes.map((l,i)=>`<tr><td style="padding:4px 6px;">${i+1}</td><td style="padding:4px 6px;">${escapeHtml(l.designation||'—')}</td><td style="padding:4px 6px;text-align:right;">${Number(l.qte)||0}</td><td style="padding:4px 6px;text-align:right;">${dt(l.pu)}</td><td style="padding:4px 6px;text-align:right;">${(Number(l.remise)||0)} %</td><td style="padding:4px 6px;text-align:right;font-weight:700;">${dt(ligneTotal(l))}</td></tr>`).join('');
+      const rows = lignes.map((l,i)=>`<tr><td style="padding:4px 6px;">${i+1}</td><td style="padding:4px 6px;">${escapeHtml(l.reference||'—')}</td><td style="padding:4px 6px;">${escapeHtml(l.designation||'—')}</td><td style="padding:4px 6px;text-align:right;">${Number(l.qte)||0}</td><td style="padding:4px 6px;text-align:center;">${escapeHtml(l.unite||'—')}</td><td style="padding:4px 6px;text-align:right;">${dt(l.pu)}</td><td style="padding:4px 6px;text-align:right;font-weight:700;">${dt(ligneTotal(l))}</td></tr>`).join('');
       return `<div class="detail-item full"><span class="dl">${f.label}</span>
         <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;">
-          <thead><tr style="color:var(--text-muted);font-size:11px;text-transform:uppercase;"><th style="text-align:left;padding:4px 6px;">#</th><th style="text-align:left;padding:4px 6px;">Désignation</th><th style="text-align:right;padding:4px 6px;">Qté</th><th style="text-align:right;padding:4px 6px;">Prix U.</th><th style="text-align:right;padding:4px 6px;">Remise</th><th style="text-align:right;padding:4px 6px;">Total HT</th></tr></thead>
+          <thead><tr style="color:var(--text-muted);font-size:11px;text-transform:uppercase;"><th style="text-align:left;padding:4px 6px;">#</th><th style="text-align:left;padding:4px 6px;">Référence</th><th style="text-align:left;padding:4px 6px;">Description</th><th style="text-align:right;padding:4px 6px;">Quantité</th><th style="text-align:center;padding:4px 6px;">Unité</th><th style="text-align:right;padding:4px 6px;">Prix Unitaire</th><th style="text-align:right;padding:4px 6px;">Total HT</th></tr></thead>
           <tbody>${rows}</tbody>
-          <tfoot><tr><td colspan="5" style="padding:6px;text-align:right;font-weight:800;">TOTAL GÉNÉRAL HT</td><td style="padding:6px;text-align:right;font-weight:800;color:var(--gold-dark);">${dt(lignesTotalHT(lignes))}</td></tr></tfoot>
+          <tfoot><tr><td colspan="6" style="padding:6px;text-align:right;font-weight:800;">TOTAL HT</td><td style="padding:6px;text-align:right;font-weight:800;color:var(--gold-dark);">${dt(lignesTotalHT(lignes))}</td></tr></tfoot>
         </table></div></div>`;
     }
     if(f.type==='date') v = fmtDate(v);
@@ -3044,7 +3047,7 @@ function docHTML(title, bodyHtml){
   <style>${DOC_STYLE}</style></head><body>
   <div class="doc-head">
     <div style="display:flex;align-items:center;gap:14px;">
-      ${SOCIETE.logo?`<img src="${SOCIETE.logo}" alt="Logo" style="width:50px;height:50px;object-fit:contain;flex-shrink:0;">`:''}
+      ${SOCIETE.logo?`<img src="${SOCIETE.logo}" alt="Logo" style="width:110px;height:110px;object-fit:contain;flex-shrink:0;">`:''}
       <div><div class="soc">${SOCIETE.nom}</div><div class="sub">${SOCIETE.adresse}<br>Tél : ${SOCIETE.tel} · ${SOCIETE.email}<br>${SOCIETE.mf}</div></div>
     </div>
     <div class="meta">Imprimé le ${todayFR()}<br>Application de gestion comptable IMC</div>
@@ -3257,38 +3260,36 @@ function montantEnLettresDT(montant){
    docDevisOrFacture() builds the shared quote/invoice layout; kind is 'DEVIS' or 'FACTURE'. */
 function docDevisOrFacture(r, kind){
   if(!r) return null;
-  const tva = Number(r.tva)||0;
   const montantHT = Number(r.montantHT)||0;
-  const montantTTC = Number(r.montantTTC)||0;
-  const montantTaxe = montantTTC - montantHT;
+  const tva = Number(r.tva)||0;
+  const montantTTC = Number(r.montantTTC) || +(montantHT*(1+tva/100)).toFixed(3);
+  const montantTaxe = +(montantTTC - montantHT).toFixed(3);
   const designation = r.designation || 'Prestations selon devis';
 
-  /* lignes détaillées si présentes, sinon une seule ligne récapitulative */
+  /* lignes détaillées si présentes, sinon une seule ligne récapitulative
+     Colonnes : # | Référence | Description | Quantité | Unité | Prix Unitaire | Total HT (sans TVA ni TTC) */
   const lignes = Array.isArray(r.lignes) && r.lignes.length ? r.lignes : null;
   const lignesRows = lignes
     ? lignes.map((l,i)=>{
         const tHT = ligneTotal(l);
-        const tTTC = +(tHT*(1+tva/100)).toFixed(3);
         return `<tr>
-          <td>${String(i+1).padStart(2,'0')}</td>
+          <td>${i+1}</td>
+          <td>${escapeHtml(l.reference||'—')}</td>
           <td>${escapeHtml(l.designation||'—').replace(/\n/g,'<br>')}</td>
           <td class="amt">${Number(l.qte)||0}</td>
+          <td class="amt">${escapeHtml(l.unite||'—')}</td>
           <td class="amt">${dt(l.pu)}</td>
-          <td class="amt">${(Number(l.remise)||0) ? (Number(l.remise))+' %' : '—'}</td>
           <td class="amt">${dt(tHT)}</td>
-          <td class="amt">${tva} %</td>
-          <td class="amt">${dt(tTTC)}</td>
         </tr>`;
       }).join('')
     : `<tr>
-        <td>01</td>
+        <td>1</td>
+        <td>—</td>
         <td>${escapeHtml(designation).replace(/\n/g,'<br>')}</td>
         <td class="amt">1</td>
-        <td class="amt">${dt(montantHT)}</td>
         <td class="amt">—</td>
         <td class="amt">${dt(montantHT)}</td>
-        <td class="amt">${tva} %</td>
-        <td class="amt">${dt(montantTTC)}</td>
+        <td class="amt">${dt(montantHT)}</td>
       </tr>`;
 
   const clientMeta = [
@@ -3318,22 +3319,23 @@ function docDevisOrFacture(r, kind){
       </div>
     </div>
     <table style="margin-top:16px;">
-      <thead><tr><th>Réf</th><th>Désignation</th><th class="amt">Qté</th><th class="amt">Prix U.</th><th class="amt">Remise</th><th class="amt">Total HT</th><th class="amt">TVA</th><th class="amt">Total TTC</th></tr></thead>
+      <thead><tr><th>#</th><th>Référence</th><th>Description</th><th class="amt">Quantité</th><th class="amt">Unité</th><th class="amt">Prix Unitaire</th><th class="amt">Total HT</th></tr></thead>
       <tbody>${lignesRows}
-      <tr class="totrow"><td colspan="5" style="text-align:right;"><b>TOTAL GÉNÉRAL</b></td><td class="amt"><b>${dt(montantHT)}</b></td><td class="amt"><b>${tva} %</b></td><td class="amt"><b>${dt(montantTTC)}</b></td></tr>
+      <tr class="totrow"><td colspan="6" style="text-align:right;"><b>TOTAL HT</b></td><td class="amt"><b>${dt(montantHT)}</b></td></tr>
       </tbody>
     </table>
-    <table style="margin-top:16px;">
-      <thead><tr><th>Type de taxe</th><th>Base de calcul</th><th class="amt">Taux</th><th class="amt">Montant</th></tr></thead>
-      <tbody><tr><td>TVA</td><td>${dt(montantHT)}</td><td class="amt">${tva} %</td><td class="amt">${dt(montantTaxe)}</td></tr></tbody>
-    </table>
-    <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-      <div class="kv" style="width:320px;grid-template-columns:1fr;">
-        <div class="item"><span class="l">Total HT</span><span class="v">${dt(montantHT)}</span></div>
-        <div class="item"><span class="l">TVA ${tva} %</span><span class="v">${dt(montantTaxe)}</span></div>
+    <div style="display:flex;justify-content:space-between;gap:28px;align-items:flex-start;flex-wrap:wrap;margin-top:16px;">
+      <table style="max-width:340px;margin-top:0;">
+        <thead><tr><th>TVA</th><th class="amt">Base</th><th class="amt">Montant</th></tr></thead>
+        <tbody><tr><td>${tva} %</td><td class="amt">${dt(montantHT)}</td><td class="amt">${dt(montantTaxe)}</td></tr></tbody>
+      </table>
+      <div class="kv" style="width:320px;grid-template-columns:1fr;margin:0;">
+        <div class="item"><span class="l">TOTAL HT</span><span class="v">${dt(montantHT)}</span></div>
+        <div class="item"><span class="l">BASE TVA</span><span class="v">${dt(montantHT)}</span></div>
+        <div class="item"><span class="l">TOTAL TVA</span><span class="v">${dt(montantTaxe)}</span></div>
       </div>
     </div>
-    <div class="net" style="max-width:340px;margin-left:auto;"><span>TOTAL GÉNÉRAL TTC</span><span>${dt(montantTTC)}</span></div>
+    <div class="net" style="max-width:340px;margin-left:auto;"><span>TOTAL TTC</span><span>${dt(montantTTC)}</span></div>
     <div class="box" style="margin-top:22px;font-size:12.5px;line-height:1.6;">
       <b>${arreteLabel}</b><br>${montantEnLettresDT(montantTTC)}.
     </div>
