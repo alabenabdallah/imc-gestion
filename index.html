@@ -834,6 +834,11 @@
 .dossier-dep-subtotal{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin:6px 0 2px;border-radius:12px;background:linear-gradient(135deg,rgba(46,95,191,.08),rgba(217,169,74,.06));border:1px solid rgba(46,95,191,.18);}
 .dossier-dep-subtotal .ddl{font-size:12px;font-weight:700;color:var(--ink-soft,#2b3450);text-transform:uppercase;letter-spacing:.06em;}
 .dossier-dep-subtotal .ddv{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:var(--gold-dark,#1e4494);}
+
+.dpd-content-sum{display:flex;gap:14px;flex-wrap:wrap;margin:2px 0 12px;padding:8px 10px;border-radius:10px;background:rgba(46,95,191,.05);}
+.dpd-content-sum span{font-size:11.5px;color:var(--ink-soft,#2b3450);font-weight:600;display:inline-flex;align-items:center;gap:5px;}
+.dpd-content-sum span i{color:var(--gold-dark,#1e4494);font-size:11px;}
+.dpd-card-click:hover{outline:2px solid rgba(46,95,191,.25);outline-offset:2px;}
 </style>
 </head>
 <body>
@@ -3055,7 +3060,7 @@ const PAGE_META = {
   dashboard:    {title:'Bonjour, Comptable !', sub:'Voici un aperçu de votre activité.'},
   clients:      {title:'Clients / Dossiers',   sub:'Gérez tous vos clients et dossiers.'},
   factures:     {title:'Factures',             sub:'Créez et suivez vos factures.'},
-  dossiers:     {title:'Dossiers / Chantiers', sub:'Chaque dossier regroupe employés, devis, factures, dépenses et rapports.'},
+  dossiers:     {title:'Dépenses par dossier', sub:'Cliquez sur un dossier pour voir son contenu complet.'},
   'dossier-detail': {title:'Dossier',           sub:'Vue complète du chantier.'},
   devis:        {title:'Devis',                sub:'Préparez et envoyez vos devis.'},
   depenses:     {title:'Dépenses',             sub:'Suivez toutes vos sorties d\'argent.'},
@@ -4221,8 +4226,8 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
 
   let dpdChart=null, dashChart=null, miniChart=null, dpdSearch='';
 
-  function renderPage(){
-    const page = document.getElementById('page-depensesDossier'); if(!page) return;
+  function renderPage(pageId){
+    const page = document.getElementById(pageId || 'page-depensesDossier'); if(!page) return;
     const {rows, grand} = data();
     const withExp = rows.filter(r=>r.total>0).length;
     const stats = '<div class="stat-strip">'
@@ -4239,8 +4244,15 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
         lines = '<ul class="dpd-lines">' + r.items.slice().sort((a,b)=>(Number(b.montant)||0)-(Number(a.montant)||0)).map(x=>
           '<li><span class="dpd-lbl">'+(x.categorie?'<span class="dpd-cat">'+escH(x.categorie)+'</span>':'')+escH(x.libelle||'—')+'</span><span class="dpd-val">'+money(x.montant)+'</span></li>').join('') + '</ul>';
       }
-      return '<div class="dpd-card"><div class="dpd-card-head"><div><div class="dpd-name">'+escH(r.label)+'</div><div class="dpd-client">'+escH(r.client)+'</div></div>'
+      var contenu='';
+      try{ if(typeof dossierRecords==='function'){ var RR=dossierRecords(r.label);
+        contenu='<div class="dpd-content-sum"><span title="Employés"><i class="fa-solid fa-helmet-safety"></i> '+RR.employes.length+'</span>'
+          +'<span title="Devis"><i class="fa-solid fa-file-signature"></i> '+RR.devis.length+'</span>'
+          +'<span title="Factures"><i class="fa-solid fa-file-invoice"></i> '+RR.factures.length+'</span>'
+          +'<span title="Dépenses"><i class="fa-solid fa-sack-dollar"></i> '+RR.depenses.length+'</span></div>'; } }catch(e){}
+      return '<div class="dpd-card dpd-card-click" data-dpd-open="'+escH(r.label)+'" style="cursor:pointer;"><div class="dpd-card-head"><div><div class="dpd-name">'+escH(r.label)+'</div><div class="dpd-client">'+escH(r.client)+'</div></div>'
         + '<div class="dpd-total"><div class="amt">'+money(r.total)+'</div><div class="lab">Total dépenses</div></div></div>'
+        + contenu
         + '<div class="dpd-share"><i style="width:'+share.toFixed(1)+'%"></i></div>'
         + '<div class="dpd-share-lab"><span>Part du total</span><b>'+share.toFixed(1)+'%</b></div>'
         + lines
@@ -4384,7 +4396,8 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
   window.navigate = function(route){
     const r = _navigate ? _navigate.apply(this, arguments) : undefined;
     try{
-      if(route==='depensesDossier') renderPage();
+      if(route==='depensesDossier') renderPage('page-depensesDossier');
+      if(route==='dossiers') renderPage('page-dossiers');
       if(route==='dashboard') renderDashChart();
     }catch(e){ console.warn('DPD nav hook', e); }
     return r;
