@@ -839,6 +839,14 @@
 .dpd-content-sum span{font-size:11.5px;color:var(--ink-soft,#2b3450);font-weight:600;display:inline-flex;align-items:center;gap:5px;}
 .dpd-content-sum span i{color:var(--gold-dark,#1e4494);font-size:11px;}
 .dpd-card-click:hover{outline:2px solid rgba(46,95,191,.25);outline-offset:2px;}
+
+.dpd-actions{display:flex;gap:6px;}
+.dpd-actions .act-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line-strong,rgba(19,26,46,.16));background:rgba(255,255,255,.7);display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted,#66708c);cursor:pointer;transition:all .18s;}
+.dpd-actions .act-btn:hover{background:#fff;transform:translateY(-2px);box-shadow:0 6px 14px -6px rgba(20,32,72,.25);}
+.dpd-actions .act-btn.edit:hover{color:#3B82D6;border-color:rgba(59,130,214,.5);}
+.dpd-actions .act-btn.del:hover{color:#E0554A;border-color:rgba(224,85,74,.5);}
+.dpd-actions .act-btn.view:hover{color:#1E4494;border-color:rgba(46,95,191,.5);}
+.dpd-card-foot{align-items:center;}
 </style>
 </head>
 <body>
@@ -2314,6 +2322,7 @@ $('#formSaveBtn').addEventListener('click', async ()=>{
     showToast(cfg.singular+' modifié(e) avec succès');
     logActivity(name, DB[cfg.key][idx], 'modifié');
     dbUpsert(cfg.key, DB[cfg.key][idx]);
+    try{ if(typeof DPD_onRecordSaved==='function') DPD_onRecordSaved(name, DB[cfg.key][idx], true); }catch(e){ console.warn(e); }
   } else {
     // conserve les valeurs pré-remplies non éditables (ex. pieceJointe d'une facture importée)
     const rec = Object.assign({id:uid()}, formCtx.prefill||{}, data);
@@ -2321,6 +2330,7 @@ $('#formSaveBtn').addEventListener('click', async ()=>{
     showToast(cfg.singular+' créé(e) avec succès');
     logActivity(name, rec, 'créé');
     dbUpsert(cfg.key, rec);
+    try{ if(typeof DPD_onRecordSaved==='function') DPD_onRecordSaved(name, rec, false); }catch(e){ console.warn(e); }
   }
   closeModal(formModal);
   renderStats(name);
@@ -4250,17 +4260,23 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
           +'<span title="Devis"><i class="fa-solid fa-file-signature"></i> '+RR.devis.length+'</span>'
           +'<span title="Factures"><i class="fa-solid fa-file-invoice"></i> '+RR.factures.length+'</span>'
           +'<span title="Dépenses"><i class="fa-solid fa-sack-dollar"></i> '+RR.depenses.length+'</span></div>'; } }catch(e){}
-      return '<div class="dpd-card dpd-card-click" data-dpd-open="'+escH(r.label)+'" style="cursor:pointer;"><div class="dpd-card-head"><div><div class="dpd-name">'+escH(r.label)+'</div><div class="dpd-client">'+escH(r.client)+'</div></div>'
+      var actions = '<div class="dpd-actions">'
+        + '<button class="act-btn view" title="Voir le contenu" data-dpd-view="'+escH(r.id)+'"><i class="fa-solid fa-eye"></i></button>'
+        + '<button class="act-btn edit" title="Modifier le dossier" data-dpd-edit="'+escH(r.id)+'"><i class="fa-solid fa-pen"></i></button>'
+        + '<button class="act-btn del" title="Supprimer le dossier" data-dpd-del="'+escH(r.id)+'"><i class="fa-solid fa-trash"></i></button>'
+        + '</div>';
+      return '<div class="dpd-card dpd-card-click" data-dpd-open="'+escH(r.label)+'"><div class="dpd-card-head"><div><div class="dpd-name">'+escH(r.label)+'</div><div class="dpd-client">'+escH(r.client)+'</div></div>'
         + '<div class="dpd-total"><div class="amt">'+money(r.total)+'</div><div class="lab">Total dépenses</div></div></div>'
         + contenu
         + '<div class="dpd-share"><i style="width:'+share.toFixed(1)+'%"></i></div>'
         + '<div class="dpd-share-lab"><span>Part du total</span><b>'+share.toFixed(1)+'%</b></div>'
         + lines
-        + '<div class="dpd-card-foot"><span class="dpd-count">'+r.items.length+' dépense'+(r.items.length>1?'s':'')+'</span>'
-        + '<span class="dpd-open" data-dpd-open="'+escH(r.label)+'">Ouvrir le dossier <i class="fa-solid fa-arrow-right"></i></span></div></div>';
+        + '<div class="dpd-card-foot">'+actions
+        + '<span class="dpd-open" data-dpd-open="'+escH(r.label)+'">Ouvrir <i class="fa-solid fa-arrow-right"></i></span></div></div>';
     }).join('');
     page.innerHTML =
-      '<div class="crud-toolbar"><div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher un dossier..." id="dpdSearchInput" value="'+escH(dpdSearch)+'"></div>'
+      actionBar(pageId)
+      + '<div class="crud-toolbar"><div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher un dossier..." id="dpdSearchInput" value="'+escH(dpdSearch)+'"></div>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn-ghost" id="dpdPrint"><i class="fa-solid fa-print"></i> Imprimer</button>'
       + '<button class="btn-ghost" id="dpdPdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>'
       + '<button class="btn-ghost" id="dpdCsv"><i class="fa-solid fa-file-csv"></i> Exporter CSV</button></div></div>'
@@ -4268,14 +4284,24 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
       + '<div class="panel" style="margin-bottom:18px;"><div class="panel-head"><h3>Comparatif des dépenses par dossier</h3></div><div class="dpd-chart-wrap"><canvas id="dpdChartCanvas"></canvas></div></div>'
       + '<div id="dpdCards" class="dpd-grid">'+cards+'</div>';
 
+    wireActionBar();
     const inp = document.getElementById('dpdSearchInput');
     if(inp) inp.oninput = ()=>{ dpdSearch = inp.value; const q=dpdSearch.toLowerCase();
       page.querySelectorAll('#dpdCards .dpd-card').forEach(c=>{ c.style.display = c.textContent.toLowerCase().includes(q)?'':'none'; }); };
-    page.querySelectorAll('[data-dpd-open]').forEach(el=> el.onclick = ()=>{
+    page.querySelectorAll('[data-dpd-open]').forEach(el=> el.onclick = (ev)=>{
+      if(ev && ev.target && ev.target.closest('.dpd-actions')) return;
       const label = el.getAttribute('data-dpd-open');
       const d = (DB.dossiers||[]).find(x=>dossLabel(x)===label);
       if(d && typeof openDossier==='function'){ openDossier(d.id); }
     });
+    // Actions CRUD par carte
+    page.querySelectorAll('[data-dpd-view]').forEach(b=> b.onclick=(ev)=>{ ev.stopPropagation();
+      const id=b.getAttribute('data-dpd-view'); const d=(DB.dossiers||[]).find(x=>x.id===id);
+      if(d && typeof openDossier==='function') openDossier(d.id); });
+    page.querySelectorAll('[data-dpd-edit]').forEach(b=> b.onclick=(ev)=>{ ev.stopPropagation();
+      const id=b.getAttribute('data-dpd-edit'); if(typeof openForm==='function') openForm('dossiers', id); });
+    page.querySelectorAll('[data-dpd-del]').forEach(b=> b.onclick=(ev)=>{ ev.stopPropagation();
+      const id=b.getAttribute('data-dpd-del'); DPD_deleteDossier(id); });
     const P=document.getElementById('dpdPrint'); if(P) P.onclick=printReport;
     const F=document.getElementById('dpdPdf'); if(F) F.onclick=pdfReport;
     const C=document.getElementById('dpdCsv'); if(C) C.onclick=csvReport;
@@ -4323,12 +4349,19 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
       });
       body+='<tr style="background:#fbf7ee;font-weight:700;"><td colspan="4" style="padding:6px 8px;border:1px solid #eee;text-align:right;">Sous-total '+escH(r.label)+'</td><td style="padding:6px 8px;border:1px solid #eee;text-align:right;font-family:monospace;">'+money(r.total)+'</td></tr></tbody></table>';
     });
-    return '<div style="font-family:Inter,Arial,sans-serif;color:#1a2340;padding:8px;">'
-      +'<div style="display:flex;align-items:center;gap:12px;border-bottom:2px solid #2E5FBF;padding-bottom:10px;margin-bottom:6px;">'
-      +(logo?'<img src="'+logo+'" style="height:46px;">':'')+'<div><div style="font-family:Sora,Arial;font-weight:800;font-size:18px;color:#12306E;">Dépenses par dossier</div>'
-      +'<div style="font-size:12px;color:#666;">Édité le '+new Date().toLocaleDateString('fr-FR')+'</div></div>'
-      +'<div style="margin-left:auto;text-align:right;"><div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.1em;">Total général</div>'
-      +'<div style="font-family:Sora,Arial;font-weight:800;font-size:20px;color:#1E4494;">'+money(grand)+'</div></div></div>'+body+'</div>';
+    var soc = (typeof SOCIETE!=='undefined') ? SOCIETE : {nom:'STE IMC E RENOVATION URBAIN',adresse:'',tel:'',email:'',mf:''};
+    var head = '<div style="display:flex;align-items:flex-start;gap:14px;border-bottom:2px solid #12306E;padding-bottom:12px;margin-bottom:14px;">'
+      + (logo?'<img src="'+logo+'" style="height:58px;width:auto;">':'')
+      + '<div style="flex:1;"><div style="font-family:Sora,Arial;font-weight:800;font-size:16px;color:#12306E;">'+escH(soc.nom||'')+'</div>'
+      + '<div style="font-size:11px;color:#555;line-height:1.5;margin-top:2px;">'+escH(soc.adresse||'')+'<br>'+(soc.tel?'Tél : '+escH(soc.tel):'')+(soc.email?' &nbsp;·&nbsp; '+escH(soc.email):'')+'<br>'+escH(soc.mf||'')+'</div></div>'
+      + '<div style="text-align:right;"><div style="font-family:Sora,Arial;font-weight:800;font-size:15px;color:#1E4494;">Dépenses par dossier</div>'
+      + '<div style="font-size:11px;color:#666;margin-top:2px;">Édité le '+new Date().toLocaleDateString('fr-FR')+'</div></div></div>';
+    var totalBar = '<div style="display:flex;justify-content:space-between;align-items:center;background:#12306E;color:#fff;border-radius:8px;padding:12px 18px;margin-bottom:16px;">'
+      + '<span style="font-family:Sora,Arial;font-weight:700;font-size:14px;letter-spacing:.02em;">TOTAL GÉNÉRAL DES DÉPENSES</span>'
+      + '<span style="font-family:Sora,Arial;font-weight:800;font-size:20px;">'+money(grand)+'</span></div>';
+    return '<div style="font-family:Inter,Arial,sans-serif;color:#1a2340;padding:8px;max-width:800px;margin:0 auto;">'
+      + head + totalBar + body
+      + '<div style="margin-top:22px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#999;text-align:center;">© 2026 '+escH(soc.nom||'IMC')+' — Document généré automatiquement</div></div>';
   }
   function printReport(){
     const w=window.open('','_blank'); if(!w){ if(typeof showToast==='function') showToast('Autorisez les pop-ups pour imprimer', true); return; }
@@ -4431,12 +4464,101 @@ window.IMC = { DB, navigate, openForm, refreshDashboard, saveDB, ENTITIES };
     try{ saveDB=window.saveDB; }catch(_){}
   }
 
+  // ----- Backfill : créer les dossiers manquants pour les clients existants -----
+  function backfillDossiers(){
+    try{
+      var created = 0;
+      (DB.clients||[]).forEach(function(c){
+        var made = ensureDossierForClient(c);
+        if(made) created++;
+      });
+      if(created>0){
+        try{ if(typeof saveDB==='function') saveDB('dossiers'); }catch(e){}
+        // rafraîchir si on est sur une vue concernée
+        var pd=document.getElementById('page-dossiers');
+        if(pd && pd.classList.contains('active')) renderPage('page-dossiers');
+      }
+      return created;
+    }catch(e){ console.warn('backfill', e); return 0; }
+  }
+  // Lancer le backfill une fois au chargement (léger, idempotent)
+  setTimeout(backfillDossiers, 250);
+
   // Premier rendu du panneau dashboard si on est déjà dessus
   document.addEventListener('DOMContentLoaded', ()=>{ try{ renderDashChart(); }catch(e){} });
   setTimeout(()=>{ try{ renderDashChart(); }catch(e){} }, 400);
 
+
+  // ----- Création automatique d'un dossier à partir d'un client -----
+  function ensureDossierForClient(client){
+    if(!client) return null;
+    var dossName = (client.dossier && String(client.dossier).trim()) ? String(client.dossier).trim() : (client.nom||'').trim();
+    if(!dossName) return null;
+    var exists = (DB.dossiers||[]).some(function(d){ return dossLabel(d)===dossName; });
+    if(exists) return null;
+    var rec = { id:(typeof uid==='function'?uid():'d'+Date.now()),
+      nom: dossName, client: client.nom||'', adresse: client.adresse||'',
+      dateDebut: (typeof todayISO==='function'?todayISO():new Date().toISOString().slice(0,10)),
+      dateFin:'', budget: Number(client.montant)||0,
+      statut: 'En cours', description:'' };
+    DB.dossiers.unshift(rec);
+    try{ if(typeof dbUpsert==='function') dbUpsert('dossiers', rec); }catch(e){}
+    try{ if(typeof saveDB==='function') saveDB('dossiers'); }catch(e){}
+    return rec;
+  }
+
+  window.DPD_onRecordSaved = function(name, rec, isEdit){
+    try{
+      if(name==='clients'){
+        var created = ensureDossierForClient(rec);
+        if(created && typeof showToast==='function') showToast('Dossier « '+created.nom+' » créé automatiquement');
+      }
+      // rafraîchir la vue cartes si elle est visible
+      var pd = document.getElementById('page-dossiers');
+      if(pd && pd.classList.contains('active')) renderPage('page-dossiers');
+      var pdd = document.getElementById('page-depensesDossier');
+      if(pdd && pdd.classList.contains('active')) renderPage('page-depensesDossier');
+      renderDashChart();
+    }catch(e){ console.warn('DPD_onRecordSaved', e); }
+  };
+
+  // ----- Barre d'action au-dessus des cartes (bouton Nouveau dossier) -----
+  function actionBar(pageId){
+    var isDoss = (pageId==='page-dossiers');
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px;">'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+      + '<button class="btn-primary" id="dpdNewDossier"><i class="fa-solid fa-plus"></i> Nouveau dossier</button>'
+      + '<button class="btn-ghost" id="dpdNewClient"><i class="fa-solid fa-user-plus"></i> Nouveau client</button>'
+      + '</div></div>';
+  }
+  function wireActionBar(){
+    var nd = document.getElementById('dpdNewDossier');
+    if(nd) nd.onclick = function(){ if(typeof openForm==='function') openForm('dossiers'); };
+    var nc = document.getElementById('dpdNewClient');
+    if(nc) nc.onclick = function(){ if(typeof openForm==='function') openForm('clients'); };
+  }
+
+  function DPD_deleteDossier(id){
+    var d = (DB.dossiers||[]).find(function(x){ return x.id===id; });
+    if(!d) return;
+    var label = dossLabel(d);
+    var nExp = expFor(label).length;
+    var msg = 'Supprimer le dossier « '+label+' » ?' + (nExp>0 ? '\n\n'+nExp+' dépense(s) y sont rattachées (elles ne seront pas supprimées).' : '');
+    if(!window.confirm(msg)) return;
+    DB.dossiers = DB.dossiers.filter(function(x){ return x.id!==id; });
+    try{ if(typeof saveDB==='function') saveDB('dossiers'); }catch(e){}
+    try{ if(typeof dbDelete==='function') dbDelete('dossiers', id); }catch(e){}
+    if(typeof showToast==='function') showToast('Dossier supprimé', true);
+    var pd=document.getElementById('page-dossiers');
+    if(pd && pd.classList.contains('active')) renderPage('page-dossiers');
+    var pdd=document.getElementById('page-depensesDossier');
+    if(pdd && pdd.classList.contains('active')) renderPage('page-depensesDossier');
+    renderDashChart();
+    try{ if(typeof refreshDashboard==='function') refreshDashboard(); }catch(e){}
+  }
+
   // API
-  window.DPD = { renderPage, renderDashChart, data };
+  window.DPD = { renderPage, renderDashChart, data, ensureDossierForClient, DPD_deleteDossier, backfillDossiers };
 })();
 
 </script>
