@@ -354,6 +354,8 @@
   .grid-charts{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;margin-bottom:18px;}
   .panel{border-radius:var(--radius);padding:22px;position:relative;transition:box-shadow .3s var(--ease),transform .3s var(--ease);}
   .panel:hover{box-shadow:var(--shadow-hover);}
+  .dd-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-3px);border-color:rgba(46,95,191,.3);}
+  .dd-card:active{transform:translateY(-1px);}
   .panel::before{content:"";position:absolute;top:0;left:22px;right:22px;height:1px;background:var(--gold-line);opacity:.55;}
   .panel::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px 180px at var(--mx,50%) var(--my,0%), rgba(46,95,191,.07), transparent 70%);opacity:0;transition:opacity .35s ease;pointer-events:none;}
   .panel:hover::after{opacity:1;}
@@ -525,6 +527,10 @@
   .stat-mini.accent-champ{--stat-grad:linear-gradient(145deg,var(--champ-bright),var(--champ-dark));--stat-glow:var(--champ-glow);}
   .stat-mini.accent-emerald{--stat-grad:linear-gradient(145deg,#22D692,var(--emerald-deep));--stat-glow:rgba(18,166,110,.38);}
   .stat-mini.accent-blue{--stat-grad:linear-gradient(145deg,#6AB4FF,var(--blue));--stat-glow:rgba(59,130,214,.38);}
+  /* budget dépassé : la carte entière passe en alerte rouge, pas besoin de chercher */
+  .stat-mini.danger{--stat-grad:linear-gradient(145deg,#F0776A,var(--red));--stat-glow:rgba(224,85,74,.4);border-color:rgba(224,85,74,.35);}
+  .stat-mini.danger .v{background:linear-gradient(180deg,var(--red),#A6342A);-webkit-background-clip:text;background-clip:text;}
+  .stat-mini.danger .stat-mini-icon{background:var(--stat-grad);}
   .stat-mini .l{font-size:10.5px;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;position:relative;z-index:1;}
   .stat-mini .v{
     font-size:22px;font-weight:800;font-family:'Sora';letter-spacing:-.01em;position:relative;z-index:1;
@@ -957,6 +963,7 @@
 
       <div class="nav-label">Analyse</div>
       <a class="nav-item" data-route="dashboard2"><i class="icon fa-solid fa-chart-simple"></i>Tableaux de bord</a>
+      <a class="nav-item" data-route="depenses-dossier"><i class="icon fa-solid fa-chart-pie"></i>Dépenses par dossier</a>
       <a class="nav-item" data-route="rapports"><i class="icon fa-solid fa-file-lines"></i>Rapports financiers</a>
       <a class="nav-item" data-route="hebdo"><i class="icon fa-solid fa-calendar-week"></i>Rapport hebdomadaire</a>
       <a class="nav-item" data-route="import"><i class="icon fa-solid fa-cloud-arrow-up"></i>Importation Factures / Devis</a>
@@ -1096,6 +1103,14 @@
         </div>
       </div>
 
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-head">
+          <h3>Dépenses par dossier</h3>
+          <a class="see-all" data-go="depenses-dossier">Analyse détaillée</a>
+        </div>
+        <div class="chart-wrap" id="depDossierChartWrap"><canvas id="depDossierChart"></canvas></div>
+      </div>
+
       <div class="grid-bottom">
         <div class="panel">
           <h3 style="margin:0 0 14px;font-size:15.5px;">Dernières activités</h3>
@@ -1150,6 +1165,7 @@
     <section class="page" id="page-parametres"></section>
     <section class="page" id="page-aide"></section>
     <section class="page" id="page-dashboard2"></section>
+    <section class="page" id="page-depenses-dossier"></section>
     <section class="page" id="page-employes"></section>
     <section class="page" id="page-pointage"></section>
     <section class="page" id="page-acomptes"></section>
@@ -1525,6 +1541,11 @@ const ENTITIES = {
       {h:'Client', render:r=>escapeHtml(r.client||'—')},
       {h:'Début', render:r=>fmtDate(r.dateDebut)},
       {h:'Budget', cls:'cell-amt', render:r=>euro(r.budget)},
+      {h:'Total dépenses', cls:'cell-amt', render:r=>{
+        const K = dossierKpis(r);
+        const over = K.budgetRestant < 0;
+        return `<span style="${over?'color:var(--red);font-weight:800;':''}">${euro(K.depenses)}</span>`;
+      }},
       {h:'Contenu', render:r=>{
         const R = dossierRecords(r.nom);
         return `<span style="font-size:12px;color:var(--text-muted)">${R.employes.length} empl. · ${R.devis.length} devis · ${R.factures.length} fact. · ${R.depenses.length} dép.</span>`;
@@ -2111,8 +2132,9 @@ function renderStats(name){
   if(name==='dossiers'){
     const enCours = rows.filter(r=>r.statut==='En cours').length;
     const budget = rows.reduce((s,r)=>s+(+r.budget||0),0);
+    const depensesCumul = rows.reduce((s,r)=>s+dossierKpis(r).depenses,0);
     const consomme = rows.reduce((s,r)=>s+dossierKpis(r).budgetConsomme,0);
-    html = strip([{l:'Dossiers',v:rows.length},{l:'En cours',v:enCours},{l:'Budget cumulé',v:euro(budget)},{l:'Budget consommé',v:euro(consomme)},{l:'Budget restant',v:euro(budget-consomme)}]);
+    html = strip([{l:'Dossiers',v:rows.length},{l:'En cours',v:enCours},{l:'Budget cumulé',v:euro(budget)},{l:'Dépenses cumulées',v:euro(depensesCumul)},{l:'Budget restant',v:euro(budget-consomme)}]);
   } else if(name==='clients'){
     const actifs = rows.filter(r=>r.statut==='Actif').length;
     const total = rows.reduce((s,r)=>s+(+r.montant||0),0);
@@ -2587,6 +2609,24 @@ function dossierKpis(d){
   const budgetRestant = budget - budgetConsomme;
   return {R, facture, encaisse, depenses, acomptes, devisT, jours, paieCout, budget, budgetConsomme, budgetRestant, marge: encaisse - depenses - acomptes};
 }
+
+/* Dépenses groupées par dossier, triées par montant décroissant — alimente
+   la page « Dépenses par dossier » (Analyse) et son export. */
+function depensesParDossierData(){
+  return DB.dossiers.map(d=>{
+    const list = dossierRecords(d.nom).depenses.slice().sort((a,b)=>(Number(b.montant)||0)-(Number(a.montant)||0));
+    const total = list.reduce((s,x)=>s+(Number(x.montant)||0),0);
+    const K = dossierKpis(d);
+    /* Bénéfice réel du chantier : total facturé moins tous les coûts
+       (dépenses + acomptes + masse salariale), pas seulement les dépenses —
+       cohérent avec budgetConsomme utilisé partout ailleurs dans l'appli. */
+    const facture = K.facture;
+    const devis = K.devisT;
+    const benefice = facture - K.budgetConsomme;
+    return { dossier:d, list, total, facture, devis, benefice };
+  }).sort((a,b)=> b.total - a.total);
+}
+
 function dossierPanel(title, icon, heads, rowsHtml, emptyMsg){
   return `<div class="panel" style="margin-bottom:18px;">
     <div class="panel-head"><h3><i class="fa-solid ${icon}" style="color:var(--gold-dark);margin-right:10px;"></i>${title}</h3></div>
@@ -2613,8 +2653,13 @@ function openDossier(id){
     {l:'Marge estimée', v:euro(K.marge)},
     {l:'Budget', v:euro(K.budget)},
     {l:'Budget consommé', v:euro(K.budgetConsomme)},
-    {l:'Budget restant', v:euro(K.budgetRestant)},
+    {l:'Budget restant', v:euro(K.budgetRestant), danger: K.budgetRestant < 0},
   ];
+
+  /* répartition des dépenses du dossier par catégorie, pour le mini-graphique */
+  const depCats = {};
+  R.depenses.forEach(x=>{ const c = x.categorie||'Autre'; depCats[c] = (depCats[c]||0) + (Number(x.montant)||0); });
+  const depCatEntries = Object.entries(depCats).sort((a,b)=>b[1]-a[1]);
 
   page.innerHTML = `
     <div class="crud-toolbar">
@@ -2637,7 +2682,11 @@ function openDossier(id){
       </div>
     </div>
 
-    <div class="stat-strip">${kpi.map(i=>`<div class="stat-mini"><div class="l">${i.l}</div><div class="v">${i.v}</div></div>`).join('')}</div>
+    <div class="stat-strip">${kpi.map((i,idx)=>`
+      <div class="stat-mini${i.danger?' danger':' accent-'+STAT_ACCENTS[idx % STAT_ACCENTS.length]}" style="animation-delay:${idx*50}ms">
+        <div class="stat-mini-icon"><i class="fa-solid ${i.danger?'fa-triangle-exclamation':statIcon(i.l)}"></i></div>
+        <div class="l">${i.l}</div><div class="v">${i.v}</div>
+      </div>`).join('')}</div>
     <div class="fiscal-note"><i class="fa-solid fa-triangle-exclamation"></i><div>
       <b>Budget consommé</b> = Dépenses + Acomptes versés + Masse salariale (brut − CNSS salarié − autres retenues, hors le champ « acomptes » propre à chaque fiche de paie, déjà déduit du net pour éviter un double comptage avec les acomptes suivis dans l'onglet Acomptes). Vérifiez vos saisies si un même acompte a été enregistré à la fois dans « Acomptes » et re-saisi manuellement dans une fiche de paie.
     </div></div>
@@ -2657,10 +2706,25 @@ function openDossier(id){
       R.factures.map(x=>`<tr><td class="cell-strong">${escapeHtml(x.numero)}</td><td>${escapeHtml(x.client)}</td><td>${fmtDate(x.dateEmission)}</td><td class="cell-amt">${euro(x.montantTTC)}</td><td>${stBadge(x.statut)}</td></tr>`).join(''),
       'Aucune facture rattachée à ce dossier.')}
 
-    ${dossierPanel('Dépenses ('+R.depenses.length+')','fa-sack-dollar',
-      ['Libellé','Catégorie','Date','Montant','Statut'],
-      R.depenses.map(x=>`<tr><td class="cell-strong">${escapeHtml(x.libelle)}</td><td>${escapeHtml(x.categorie||'—')}</td><td>${fmtDate(x.date)}</td><td class="cell-amt">${euro(x.montant)}</td><td>${stBadge(x.statut)}</td></tr>`).join(''),
-      'Aucune dépense sur ce dossier.')}
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="panel-head">
+        <h3><i class="fa-solid fa-sack-dollar" style="color:var(--gold-dark);margin-right:10px;"></i>Dépenses (${R.depenses.length})</h3>
+        <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--gold-dark),var(--gold-deep));color:#fff;border-radius:12px;padding:9px 16px;font-weight:800;font-size:15px;box-shadow:0 10px 22px -12px rgba(30,68,148,.5);">
+          <i class="fa-solid fa-circle-dollar-to-slot"></i> Sous-total : ${euro(K.depenses)}
+        </div>
+      </div>
+      ${R.depenses.length ? `
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start;">
+        <div class="table-wrap" style="box-shadow:none;border:0;margin:0;">
+          <table class="data"><thead><tr><th>Libellé</th><th>Catégorie</th><th>Date</th><th style="text-align:right;">Montant</th><th>Statut</th></tr></thead>
+          <tbody>${R.depenses.slice().sort((a,b)=>(Number(b.montant)||0)-(Number(a.montant)||0)).map(x=>`<tr><td class="cell-strong">${escapeHtml(x.libelle)}</td><td>${escapeHtml(x.categorie||'—')}</td><td>${fmtDate(x.date)}</td><td class="cell-amt">${euro(x.montant)}</td><td>${stBadge(x.statut)}</td></tr>`).join('')}</tbody></table>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:8px;">Répartition par catégorie</div>
+          <div style="position:relative;height:200px;"><canvas id="depCatChart"></canvas></div>
+        </div>
+      </div>` : `<div class="empty-state" style="padding:18px;"><p>Aucune dépense sur ce dossier.</p></div>`}
+    </div>
 
     ${dossierPanel('Pointage — '+K.jours+' jour(s) cumulés','fa-clock',
       ['Employé','Date','Jours','Heures','H. sup.','Statut'],
@@ -2688,6 +2752,25 @@ function openDossier(id){
   $('#pageTitle').textContent = d.nom;
   $('#pageSubtitle').textContent = 'Vue complète du chantier — ' + (d.client||'');
   $$('.nav-item[data-route]').forEach(n=> n.classList.toggle('active', n.dataset.route==='dossiers'));
+
+  if(depCatEntries.length) setTimeout(()=> drawDepCatChart(depCatEntries), 50);
+}
+/* instance unique réutilisée à chaque ouverture de fiche dossier, pour éviter
+   l'erreur Chart.js « canvas is already in use » quand on navigue d'un
+   dossier à l'autre */
+let depCatChartInst = null;
+function drawDepCatChart(entries){
+  const ctx = $('#depCatChart')?.getContext('2d');
+  if(!ctx) return;
+  if(depCatChartInst){ depCatChartInst.destroy(); depCatChartInst = null; }
+  const palette = [C.gold, C.teal, C.emerald, '#D9A94A', C.blue, '#A98CE0', C.red, C.steel];
+  depCatChartInst = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels: entries.map(e=>e[0]), datasets:[{ data: entries.map(e=>e[1]), backgroundColor: entries.map((_,i)=>palette[i%palette.length]), borderColor: C.ring, borderWidth:2, hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, padding:10, font:{size:11} } },
+        tooltip:{ callbacks:{ label:c=> c.label+' : '+Number(c.parsed).toLocaleString('fr-TN')+' DT' } } } }
+  });
 }
 
 /* ---- rapport imprimable / PDF du dossier ---- */
@@ -2745,6 +2828,46 @@ function dossierReport(d){
 }
 
 /* ---------- CSV export ---------- */
+/* CSV + document imprimable pour la page « Dépenses par dossier » */
+function exportDepensesParDossierCSV(data){
+  if(!data.length){ showToast('Rien à exporter', true); return; }
+  const header = ['Dossier','Client','Statut','Budget','Devis','Total dépenses','% du total','Facturé','Bénéfice','Nombre de dépenses'];
+  const grandTotal = data.reduce((s,x)=>s+x.total,0);
+  const esc = v=>{ const s = v==null?'':String(v).replace(/"/g,'""'); return /[;"\n]/.test(s)?`"${s}"`:s; };
+  const csv = [header.join(';')].concat(
+    data.map(x=> [x.dossier.nom, x.dossier.client||'', x.dossier.statut||'', x.dossier.budget||0, x.devis, x.total, grandTotal>0?Math.round(x.total/grandTotal*100)+'%':'0%', x.facture, x.benefice, x.list.length].map(esc).join(';'))
+  ).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `imc_depenses_par_dossier_${toISO(new Date())}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  showToast('Export CSV généré ('+data.length+' dossiers)');
+}
+function docDepensesParDossier(data, grandTotal){
+  const T = 'style="width:100%;border-collapse:collapse;font-size:11.5px;margin:6px 0 16px;"';
+  const th = 'style="border:1px solid #ccd6ea;background:#eef3fb;padding:6px 8px;text-align:left;"';
+  const td = 'style="border:1px solid #ccd6ea;padding:6px 8px;"';
+  const tdr = 'style="border:1px solid #ccd6ea;padding:6px 8px;text-align:right;"';
+  const grandDevis = data.reduce((s,x)=>s+x.devis,0);
+  const grandFacture = data.reduce((s,x)=>s+x.facture,0);
+  const grandBenefice = data.reduce((s,x)=>s+x.benefice,0);
+  const rows = data.map(x=>{
+    const pct = grandTotal>0 ? Math.round(x.total/grandTotal*100) : 0;
+    const over = x.dossier.budget>0 && x.total>Number(x.dossier.budget);
+    return `<tr><td ${td}>${escapeHtml(x.dossier.nom)}</td><td ${td}>${escapeHtml(x.dossier.client||'—')}</td>
+      <td ${tdr}>${euro(x.dossier.budget)}</td><td ${tdr}>${euro(x.devis)}</td><td ${tdr}>${euro(x.total)}</td><td ${tdr}>${pct}%</td>
+      <td ${tdr}>${euro(x.facture)}</td><td ${tdr} ${x.benefice<0?'style="border:1px solid #ccd6ea;padding:6px 8px;text-align:right;color:#A6342A;font-weight:700;"':''}>${euro(x.benefice)}</td>
+      <td ${td}>${over?'<b style="color:#A6342A;">Dépassé</b>':'—'}</td></tr>`;
+  }).join('');
+  const body = `
+    <p style="font-size:12px;line-height:1.7;">Synthèse des dossiers/chantiers — devis, dépenses, facturation et bénéfice, classés du plus au moins coûteux en dépenses.</p>
+    <table ${T}><thead><tr><th ${th}>Dossier</th><th ${th}>Client</th><th ${th}>Budget</th><th ${th}>Devis</th><th ${th}>Total dépenses</th><th ${th}>% du total</th><th ${th}>Facturé</th><th ${th}>Bénéfice</th><th ${th}>Statut budget</th></tr></thead>
+    <tbody>${rows}
+    <tr><td ${td}><b>TOTAL GÉNÉRAL</b></td><td ${td}></td><td ${td}></td><td ${tdr}><b>${euro(grandDevis)}</b></td><td ${tdr}><b>${euro(grandTotal)}</b></td><td ${td}></td><td ${tdr}><b>${euro(grandFacture)}</b></td><td ${tdr}><b>${euro(grandBenefice)}</b></td><td ${td}></td></tr>
+    </tbody></table>`;
+  return { title:'Dépenses par dossier', body, filename:`depenses_par_dossier_${toISO(new Date())}.pdf` };
+}
 function exportCSV(name){
   const cfg = ENTITIES[name];
   const rows = filteredRows(name);
@@ -3228,6 +3351,7 @@ const PAGE_META = {
   parametres:   {title:'Paramètres',           sub:'Configurez votre espace.'},
   aide:         {title:'Aide & Support',       sub:'Trouvez de l\'aide rapidement.'},
   dashboard2:   {title:'Tableaux de bord',     sub:'Vos indicateurs en un coup d\'œil.'},
+  'depenses-dossier': {title:'Dépenses par dossier', sub:'Chaque chantier et ce qu\'il a réellement coûté.'},
   employes:     {title:'Ouvriers / Employés',  sub:'Fiches du personnel de chantier et salariés.'},
   pointage:     {title:'Pointage',             sub:'Saisie des présences et heures travaillées.'},
   acomptes:     {title:'Acomptes',             sub:'Avances versées aux employés.'},
@@ -3238,7 +3362,7 @@ const PAGE_META = {
   hebdo:        {title:'Rapport hebdomadaire', sub:'Synthèse de la semaine en cours.'},
 };
 const CRUD_PAGES = ['dossiers','clients','factures','devis','depenses','banque','utilisateurs','employes','pointage','acomptes','paie','rs','biat','recus'];
-const INFO_PAGES = ['rapports','import','parametres','aide','dashboard2','hebdo'];
+const INFO_PAGES = ['rapports','import','parametres','aide','dashboard2','hebdo','depenses-dossier'];
 const builtInfo = {};
 
 function navigate(route){
@@ -3264,6 +3388,10 @@ function navigate(route){
   if(route==='utilisateurs' && authIsAdmin()){
     loadUsersList().then(()=> renderCrudPage(route));
   } else if(CRUD_PAGES.includes(route)) renderCrudPage(route);
+  /* « Dépenses par dossier » est une analyse financière en direct : on la
+     reconstruit à chaque visite plutôt que de la mettre en cache, sinon une
+     dépense ajoutée entre-temps n'apparaîtrait pas avant un rechargement. */
+  else if(route==='depenses-dossier'){ renderInfoPage(route); }
   else if(INFO_PAGES.includes(route) && !builtInfo[route]){ renderInfoPage(route); builtInfo[route]=true; }
 
   if(route==='dashboard') refreshDashboard();
@@ -3318,6 +3446,86 @@ function renderInfoPage(route){
         <div class="panel"><div class="panel-head"><h3>Trésorerie par compte</h3></div><div class="chart-wrap"><canvas id="d2bar"></canvas></div></div>
       </div>`;
     setTimeout(drawDash2Charts, 50);
+  } else if(route==='depenses-dossier'){
+    const data = depensesParDossierData();
+    const grandTotal = data.reduce((s,x)=>s+x.total,0);
+    const ddCard = (x)=>{
+      const pct = grandTotal>0 ? Math.round(x.total/grandTotal*100) : 0;
+      const over = x.dossier.budget>0 && x.total > Number(x.dossier.budget);
+      const rows = x.list.slice(0,6).map(dep=>`<tr><td class="cell-strong">${escapeHtml(dep.libelle)}</td><td>${escapeHtml(dep.categorie||'—')}</td><td>${fmtDate(dep.date)}</td><td class="cell-amt">${euro(dep.montant)}</td></tr>`).join('');
+      const more = x.list.length>6 ? `<div style="text-align:center;padding:8px 0 2px;"><button type="button" class="btn-ghost dd-more" data-id="${x.dossier.id}" style="padding:8px 16px;font-size:12px;">+${x.list.length-6} autre(s) dépense(s) — voir le dossier</button></div>` : '';
+      const benOk = x.benefice >= 0;
+      return `<div class="panel dd-card" data-id="${x.dossier.id}" data-search="${escapeHtml((x.dossier.nom+' '+(x.dossier.client||'')+' '+x.list.map(d=>d.libelle).join(' ')).toLowerCase())}" style="margin-bottom:18px;cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease);" title="Ouvrir la fiche du dossier « ${escapeHtml(x.dossier.nom)} »">
+        <div class="panel-head">
+          <h3><i class="fa-solid fa-folder-open" style="color:var(--gold-dark);margin-right:10px;"></i>${escapeHtml(x.dossier.nom)} ${stBadge(x.dossier.statut)} <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--text-muted);opacity:.6;margin-left:4px;"></i></h3>
+          <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,${over?'#D9534F,#A6342A':'var(--gold-dark),var(--gold-deep)'});color:#fff;border-radius:12px;padding:9px 16px;font-weight:800;font-size:15px;box-shadow:0 10px 22px -12px rgba(30,68,148,.5);">
+            ${over?'<i class="fa-solid fa-triangle-exclamation"></i>':''} ${euro(x.total)}
+          </div>
+        </div>
+        <div style="height:9px;border-radius:5px;background:var(--bg-2);overflow:hidden;margin:2px 0 6px;">
+          <div style="height:100%;border-radius:5px;width:${pct}%;background:linear-gradient(90deg,var(--gold-bright),var(--gold-dark));transition:width .6s var(--ease);"></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:12px;">${pct}% du total des dépenses${x.dossier.budget>0?` · Budget : ${euro(x.dossier.budget)}${over?' <b style="color:var(--red)">— dépassé</b>':''}`:''}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">
+          <div style="background:var(--bg-2);border-radius:10px;padding:9px 12px;"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Devis</div><div style="font-weight:800;font-size:14px;">${euro(x.devis)}</div></div>
+          <div style="background:var(--bg-2);border-radius:10px;padding:9px 12px;"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Facturé</div><div style="font-weight:800;font-size:14px;">${euro(x.facture)}</div></div>
+          <div style="background:var(--bg-2);border-radius:10px;padding:9px 12px;"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Total dépenses</div><div style="font-weight:800;font-size:14px;">${euro(x.total)}</div></div>
+          <div style="background:var(--bg-2);border-radius:10px;padding:9px 12px;"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Bénéfice</div><div style="font-weight:800;font-size:14px;color:${benOk?'var(--emerald)':'var(--red)'};">${euro(x.benefice)}</div></div>
+        </div>
+        ${x.list.length ? `<div class="table-wrap" style="box-shadow:none;border:0;margin:0;">
+          <table class="data"><thead><tr><th>Libellé</th><th>Catégorie</th><th>Date</th><th style="text-align:right;">Montant</th></tr></thead>
+          <tbody>${rows}</tbody></table></div>${more}` : `<div class="empty-state" style="padding:14px;"><p>Aucune dépense sur ce dossier.</p></div>`}
+      </div>`;
+    };
+    page.innerHTML = `
+      <div class="crud-toolbar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="ddSearch" placeholder="Rechercher un dossier, un client, une dépense…">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-ghost" id="ddPrint"><i class="fa-solid fa-print"></i> Imprimer</button>
+          <button class="btn-ghost" id="ddCsv"><i class="fa-solid fa-file-arrow-down"></i> Exporter CSV</button>
+          <button class="btn-ghost" id="ddPdf"><i class="fa-solid fa-file-pdf"></i> Exporter PDF</button>
+        </div>
+      </div>
+      <div class="stat-strip">${(()=>{
+        const avecDep = data.filter(x=>x.total>0).length;
+        const depasses = data.filter(x=>x.dossier.budget>0 && x.total>Number(x.dossier.budget)).length;
+        const totalDevis = data.reduce((s,x)=>s+x.devis,0);
+        const totalFacture = data.reduce((s,x)=>s+x.facture,0);
+        const totalBenefice = data.reduce((s,x)=>s+x.benefice,0);
+        const items = [
+          {l:'Dossiers', v:data.length},
+          {l:'Avec dépenses', v:avecDep},
+          {l:'Total devis', v:euro(totalDevis)},
+          {l:'Total dépenses', v:euro(grandTotal)},
+          {l:'Total facturé', v:euro(totalFacture)},
+          {l:'Bénéfice total', v:euro(totalBenefice), danger:totalBenefice<0},
+          {l:'Dossiers en dépassement', v:depasses, danger:depasses>0},
+        ];
+        return items.map((i,idx)=>`<div class="stat-mini${i.danger?' danger':' accent-'+STAT_ACCENTS[idx % STAT_ACCENTS.length]}" style="animation-delay:${idx*55}ms">
+          <div class="stat-mini-icon"><i class="fa-solid ${i.danger?'fa-triangle-exclamation':statIcon(i.l)}"></i></div>
+          <div class="l">${i.l}</div><div class="v">${i.v}</div></div>`).join('');
+      })()}</div>
+      <div id="ddCards">${data.map(ddCard).join('') || '<div class="empty-state" style="padding:30px;"><p>Aucun dossier enregistré.</p></div>'}</div>
+      <div id="ddEmpty" class="empty-state" style="padding:30px;display:none;"><p>Aucun résultat pour cette recherche.</p></div>
+    `;
+    $('#ddSearch').addEventListener('input', ()=>{
+      const q = $('#ddSearch').value.trim().toLowerCase();
+      let shown = 0;
+      $$('.dd-card').forEach(card=>{
+        const match = !q || (card.dataset.search||'').includes(q);
+        card.style.display = match ? '' : 'none';
+        if(match) shown++;
+      });
+      $('#ddEmpty').style.display = shown ? 'none' : '';
+    });
+    $$('.dd-more').forEach(btn=> btn.addEventListener('click', (e)=>{ e.stopPropagation(); openDossier(btn.dataset.id); }));
+    $$('.dd-card').forEach(card=> card.addEventListener('click', ()=> openDossier(card.dataset.id)));
+    $('#ddPrint').addEventListener('click', ()=>{ const doc = docDepensesParDossier(data, grandTotal); printShell(doc.title, doc.body); });
+    $('#ddPdf').addEventListener('click', ()=>{ const doc = docDepensesParDossier(data, grandTotal); downloadPDF(doc.title, doc.body, doc.filename); });
+    $('#ddCsv').addEventListener('click', ()=> exportDepensesParDossierCSV(data));
   } else if(route==='import'){
     page.innerHTML = `
       <div class="upload-panel" id="uploadPanel2" style="margin-bottom:18px;">
@@ -3671,6 +3879,7 @@ function refreshDashboard(){
 
   rebuildActivity();
   if(window._donutChart) updateDonut();
+  if(window._depDossierChart) drawDepDossierChart();
 }
 
 /* activity feed driven by recent records */
@@ -3781,6 +3990,39 @@ function buildDashboardCharts(){
   });
   window._donutChart = _donutChart;
   renderDonutLegend(dd);
+
+  drawDepDossierChart();
+}
+
+let _depDossierChart = null;
+function drawDepDossierChart(){
+  const ctx = $('#depDossierChart')?.getContext('2d');
+  if(!ctx) return;
+  const data = depensesParDossierData().filter(x=>x.total>0).slice(0,8);
+  const labels = data.map(x=> x.dossier.nom);
+  const values = data.map(x=> x.total);
+  const over = data.map(x=> x.dossier.budget>0 && x.total>Number(x.dossier.budget));
+  if(_depDossierChart){ _depDossierChart.destroy(); _depDossierChart = null; }
+  _depDossierChart = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{
+      data: values,
+      backgroundColor: over.map(o=> o? C.red : C.goldBright),
+      hoverBackgroundColor: over.map(o=> o? C.red : C.goldDark),
+      borderRadius:8, barThickness:18, maxBarThickness:22
+    }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      onHover:(evt,els)=>{ evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+      onClick:(evt,els)=>{ if(els.length){ openDossier(data[els[0].index].dossier.id); } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> c.parsed.x.toLocaleString('fr-TN')+' DT' } } },
+      scales:{
+        x:{ beginAtZero:true, ticks:{ callback:v=>(v/1000)+'k DT', color:C.tick, font:{size:11} }, grid:{color:C.grid, drawBorder:false} },
+        y:{ ticks:{ color:C.tick, font:{size:11.5, weight:'600'} }, grid:{display:false} }
+      }
+    }
+  });
+  window._depDossierChart = _depDossierChart;
 }
 function renderDonutLegend(dd){
   const total = dd.reduce((s,d)=>s+d.value,0)||1;
